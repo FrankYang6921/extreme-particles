@@ -120,7 +120,7 @@ public class ExpMain implements ModInitializer {
         }
     }
 
-    static void constructParticle(ParticleEffect effect, Vec3d position, Vec3d delta, Vec3d color, float alpha, int life, float scale) {
+    static synchronized void constructParticle(ParticleEffect effect, Vec3d position, Vec3d delta, Vec3d color, float alpha, int life, float scale) {
         double x = position.x;
         double y = position.y;
         double z = position.z;

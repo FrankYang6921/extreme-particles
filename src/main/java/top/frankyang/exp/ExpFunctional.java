@@ -6,6 +6,7 @@ import net.minecraft.util.math.Vec3d;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class ExpFunctional {
@@ -15,6 +16,11 @@ public class ExpFunctional {
         ScriptEngineManager factory = new ScriptEngineManager();
         host = factory.getEngineByName("JavaScript");
         Objects.requireNonNull(host);
+        try {  // Remove the latency at the first command call
+            host.eval("null");
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        }
     }
 
     static ParticleProperties getProperties(String expr, Vec3d origin, double thisTick, double finalTick) {
@@ -69,10 +75,9 @@ public class ExpFunctional {
 
     static String functionalPattern(ParticleEffect effect, String expr, Vec3d origin, double time, int count) {
         double frameTime = time / count;
+        ArrayList<ParticleProperties> props = new ArrayList<>();
 
         for (float i = 0; i < time; i += frameTime) {
-            long begin = System.nanoTime();  // Main logic begins
-
             ParticleProperties data;
             try {
                 data = getProperties(
@@ -81,25 +86,14 @@ public class ExpFunctional {
             } catch (RuntimeException e) {
                 return e.getMessage();
             }
-            Vec3d pos = new Vec3d(
-                    data.x + origin.x,
-                    data.y + origin.y,
-                    data.z + origin.z
-            );
-            Vec3d color = new Vec3d(
-                    data.r, data.g, data.b
-            );
-            ExpMain.constructParticle(effect, pos, Vec3d.ZERO, color, data.a, data.l, data.s);
 
-            long end = System.nanoTime();  // Main logic ends
-
-            double elapsed = (end - begin) / 1e3 / 1e3;
-            long sleep = (long) (frameTime - elapsed);
-            try {
-                Thread.sleep(Math.max(sleep, 0L));
-            } catch (InterruptedException ignored) {
-            }
+            props.add(data);
         }
+
+        AnimatorThread thread = new AnimatorThread(effect, props, origin, frameTime);
+        thread.setDaemon(true);
+        thread.start();
+
         return null;
     }
 
@@ -118,6 +112,47 @@ public class ExpFunctional {
             this.a = a;
             this.s = s;
             this.l = l;
+        }
+    }
+
+    private static class AnimatorThread extends Thread {
+        ParticleEffect effect;
+        ArrayList<ParticleProperties> props;
+        Vec3d origin;
+        double frame;
+
+        public AnimatorThread (ParticleEffect effect, ArrayList<ParticleProperties> props, Vec3d origin,  double frame) {
+            super();
+            this.effect = effect;
+            this.props = props;
+            this.origin = origin;
+            this.frame = frame;
+        }
+
+        @Override
+        public void run() {
+            for (ParticleProperties data : props) {
+                long begin = System.nanoTime();  // Main logic begins
+
+                Vec3d pos = new Vec3d(
+                        data.x + origin.x,
+                        data.y + origin.y,
+                        data.z + origin.z
+                );
+                Vec3d color = new Vec3d(
+                        data.r, data.g, data.b
+                );
+                ExpMain.constructParticle(effect, pos, Vec3d.ZERO, color, data.a, data.l, data.s);
+
+                long end = System.nanoTime();  // Main logic ends
+
+                double elapsed = (end - begin) / 1e3 / 1e3;
+                long sleep = (long) (frame - elapsed);
+                try {
+                    Thread.sleep(Math.max(sleep, 0L));
+                } catch (InterruptedException ignored) {
+                }
+            }
         }
     }
 }

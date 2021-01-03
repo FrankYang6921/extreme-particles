@@ -1,6 +1,5 @@
 package top.frankyang.exp.mixin;
 
-import com.google.common.collect.EvictingQueue;
 import net.minecraft.client.particle.EmitterParticle;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleManager;
@@ -11,6 +10,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
@@ -50,9 +50,8 @@ public abstract class FastParticleManager implements ResourceReloadListener {
         Particle particle;
         if (!this.newParticles.isEmpty()) {
             while ((particle = this.newParticles.poll()) != null) {
-                //noinspection UnstableApiUsage
                 this.particles.computeIfAbsent(
-                        particle.getType(), (particleTextureSheet) -> EvictingQueue.create(1048576)
+                        particle.getType(), (particleTextureSheet) -> new ArrayDeque<>()
                 ).add(particle);
             }
         }

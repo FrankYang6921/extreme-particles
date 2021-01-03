@@ -73,7 +73,11 @@ public class ExpFunctional {
         return new ParticleProperties(x, y, z, r, g, b, a, l, s);
     }
 
-    static String functionalPattern(ParticleEffect effect, String expr, Vec3d origin, double time, int count) {
+    static String renderPattern(ParticleEffect effect, String expr, Vec3d origin, double time, int count) {
+        if (ExpMain.disabled) {
+            return null;
+        }
+
         double frameTime = time / count;
         ArrayList<ParticleProperties> props = new ArrayList<>();
 
@@ -121,7 +125,7 @@ public class ExpFunctional {
         Vec3d origin;
         double frame;
 
-        public AnimatorThread (ParticleEffect effect, ArrayList<ParticleProperties> props, Vec3d origin,  double frame) {
+        public AnimatorThread(ParticleEffect effect, ArrayList<ParticleProperties> props, Vec3d origin, double frame) {
             super();
             this.effect = effect;
             this.props = props;

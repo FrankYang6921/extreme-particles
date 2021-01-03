@@ -36,7 +36,7 @@ import static net.minecraft.command.argument.Vec3ArgumentType.vec3;
 public class ExpMain implements ModInitializer {
     private static final int MAJOR_VERSION = 0;
     private static final int MINOR_VERSION = 1;
-    private static final int REVISION = 0;
+    private static final int REVISION = 2;
     private static final MinecraftClient client = MinecraftClient.getInstance();
     public static boolean disabled = false;
 

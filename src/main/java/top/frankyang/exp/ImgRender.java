@@ -10,33 +10,48 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ExpImgRender {
+public class ImgRender {
     private static final int XY = 1;
     private static final int XZ = 2;
     private static final int YZ = 4;
     private static final int HR = 8;
     private static final int VR = 16;
 
-    static String renderPattern(ParticleEffect effect, BufferedImage image, Vec3d origin, Vec3d delta, Vec2f size, int type, int life, float scale) {
+    static String renderPattern(ParticleEffect effect,
+                                Image data,
+                                Vec3d origin,
+                                Vec3d delta,
+                                Vec3d color,
+                                boolean mono,
+                                Vec2f size,
+                                int type,
+                                float alpha,
+                                int life,
+                                float scale) {
         if (ExpMain.disabled) {
             return null;
         }
 
+        BufferedImage i;
+
         if (!size.equals(Vec2f.ZERO)) {
-            Image scaled = image.getScaledInstance(
+            Image scaled = data.getScaledInstance(
                     (int) size.x, (int) size.y, Image.SCALE_SMOOTH
             );
-            image = new BufferedImage(
+            i = new BufferedImage(
                     (int) size.x, (int) size.y,
                     BufferedImage.TYPE_INT_ARGB
             );
-            Graphics2D cxt = image.createGraphics();
+            Graphics2D cxt = i.createGraphics();
             cxt.drawImage(scaled, 0, 0, null);
+        } else {
+            i = (BufferedImage) data;
         }
-        int w = image.getWidth();
-        int h = image.getHeight();
 
-        int[][] RGBArray = imageToArray(image, w, h);
+        int w = i.getWidth();
+        int h = i.getHeight();
+
+        int[][] RGBArray = imageToArray(i, w, h);
 
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
@@ -45,6 +60,23 @@ public class ExpImgRender {
                 int g = (px >> 8) & 0xff;
                 int r = (px >> 16) & 0xff;
                 int a = (px >> 24) & 0xff;
+
+                if (mono) {
+                    int k = (r + g + b) / 3;
+                    r = k;
+                    g = k;
+                    b = k;
+                }
+
+                if (color != null) {
+                    r *= color.x / 255.;
+                    g *= color.y / 255.;
+                    b *= color.z / 255.;
+                }
+
+                if (1 - alpha > 1e-5f) {
+                    a *= alpha;
+                }
 
                 if (a == 0) {
                     continue;
@@ -77,24 +109,34 @@ public class ExpImgRender {
                 }
 
                 Vec3d position = new Vec3d(origin.x + rx, origin.y + ry, origin.z + rz);
-                ExpMain.constructParticle(effect, position, delta, new Vec3d(r, g, b), a / 255.0f, life, scale);
+                ExpMain.configureParticle(effect, position, delta, new Vec3d(r, g, b), a / 255.0f, life, scale);
             }
         }
 
         return null;
     }
 
-    static String renderPattern(ParticleEffect effect, String path, Vec3d origin, Vec3d delta, Vec2f size, int type, int life, float scale) {
+    static String renderPattern(ParticleEffect effect,
+                                String data,
+                                Vec3d origin,
+                                Vec3d delta,
+                                Vec3d color,
+                                boolean mono,
+                                Vec2f size,
+                                int type,
+                                float alpha,
+                                int life,
+                                float scale) {
         BufferedImage image;
 
         try {
-            File imageFile = new File(path);
+            File imageFile = new File(data);
             image = ImageIO.read(imageFile);
         } catch (IOException e) {
             return "无法读取指定的图像文件。";
         }
 
-        return renderPattern(effect, image, origin, delta, size, type, life, scale);
+        return renderPattern(effect, image, origin, delta, color, mono, size, type, alpha, life, scale);
     }
 
     public static int[][] imageToArray(BufferedImage bf, int w, int h) {

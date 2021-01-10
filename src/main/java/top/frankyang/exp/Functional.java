@@ -7,17 +7,22 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.ArrayList;
-import java.util.Objects;
 
-public class ExpFunctional {
+public class Functional {
     private static final ScriptEngine host;
 
     static {
         ScriptEngineManager factory = new ScriptEngineManager();
         host = factory.getEngineByName("JavaScript");
-        Objects.requireNonNull(host);
+        if (host == null) {
+            throw new RuntimeException(
+                    "Extreme Particles could not be loaded with an OpenJDK above version 15. " +
+                    "Visit https://github.com/FrankYang6921/extreme-particles for more info. "
+            );
+        }
+
         try {  // Remove the latency at the first command call
-            host.eval("null");
+            host.eval("0");
         } catch (ScriptException e) {
             e.printStackTrace();
         }
@@ -73,7 +78,11 @@ public class ExpFunctional {
         return new ParticleProperties(x, y, z, r, g, b, a, l, s);
     }
 
-    static String renderPattern(ParticleEffect effect, String expr, Vec3d origin, double time, int count) {
+    static String renderPattern(ParticleEffect effect,
+                                String data,
+                                Vec3d origin,
+                                double time,
+                                int count) {
         if (ExpMain.disabled) {
             return null;
         }
@@ -82,19 +91,19 @@ public class ExpFunctional {
         ArrayList<ParticleProperties> props = new ArrayList<>();
 
         for (float i = 0; i < time; i += frameTime) {
-            ParticleProperties data;
+            ParticleProperties prop;
             try {
-                data = getProperties(
-                        expr, origin, i / 1e3, time / 1e3
+                prop = getProperties(
+                        data, origin, i / 1e3, time / 1e3
                 );
             } catch (RuntimeException e) {
                 return e.getMessage();
             }
 
-            props.add(data);
+            props.add(prop);
         }
 
-        AnimatorThread thread = new AnimatorThread(effect, props, origin, frameTime);
+        WorkerThread thread = new WorkerThread(effect, props, origin, frameTime);
         thread.setDaemon(true);
         thread.start();
 
@@ -102,9 +111,9 @@ public class ExpFunctional {
     }
 
     private static class ParticleProperties {
-        final double x, y, z;
-        final float a, s;
-        final int r, g, b, l;
+        public final double x, y, z;
+        public final float a, s;
+        public final int r, g, b, l;
 
         public ParticleProperties(double x, double y, double z, int r, int g, int b, float a, int l, float s) {
             this.x = x;
@@ -119,13 +128,13 @@ public class ExpFunctional {
         }
     }
 
-    private static class AnimatorThread extends Thread {
+    private static class WorkerThread extends Thread {
         ParticleEffect effect;
         ArrayList<ParticleProperties> props;
         Vec3d origin;
         double frame;
 
-        public AnimatorThread(ParticleEffect effect, ArrayList<ParticleProperties> props, Vec3d origin, double frame) {
+        public WorkerThread(ParticleEffect effect, ArrayList<ParticleProperties> props, Vec3d origin, double frame) {
             super();
             this.effect = effect;
             this.props = props;
@@ -146,7 +155,7 @@ public class ExpFunctional {
                 Vec3d color = new Vec3d(
                         data.r, data.g, data.b
                 );
-                ExpMain.constructParticle(effect, pos, Vec3d.ZERO, color, data.a, data.l, data.s);
+                ExpMain.configureParticle(effect, pos, Vec3d.ZERO, color, data.a, data.l, data.s);
 
                 long end = System.nanoTime();  // Main logic ends
 

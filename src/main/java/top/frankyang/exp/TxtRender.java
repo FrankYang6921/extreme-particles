@@ -38,7 +38,7 @@ public class TxtRender {
         if (size.x <= 1e-5f && size.y <= 1e-5f) {
             fontSize = 8;
         } else if (size.y <= 1e-5f) {
-            fontSize = Math.round(length);
+            fontSize = Math.round(length);  // The total width of the string
         } else if (size.x <= 1e-5f) {
             fontSize = Math.round(size.y);  // The width of a single character
         } else {

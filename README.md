@@ -21,7 +21,7 @@ Extreme Particles 模组可以做什么？
 使用这个链接来重定向到 [发行](https://github.com/FrankYang6921/extreme-particles/releases) 页。
 
 ## 教程
-使用这个链接来重定向到 [Wiki](https://github.com/FrankYang6921/wiki/releases) 页。
+使用这个链接来重定向到 [Wiki](https://github.com/FrankYang6921/extreme-particles/wiki) 页。
 
 ## 授权
 MIDIOut++ 是由kworker(FrankYang6921)制作，遵从GPLv3协议的自由软件。本软件没有担保。你可以前往红石音乐俱乐部或Minecraft视听俱乐部（591318869或1129026982）或加作者QQ（3450123872）以获取帮助。

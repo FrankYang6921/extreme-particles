@@ -1,34 +1,39 @@
-package top.frankyang.exp;
+package top.frankyang.exp.render;
 
+import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import top.frankyang.exp.Main;
+import top.frankyang.exp.anime.AnimationMgr;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
-public class ImgRender {
+public final class ImgRender {
     private static final int XY = 1;
     private static final int XZ = 2;
     private static final int YZ = 4;
     private static final int HR = 8;
     private static final int VR = 16;
 
-    static String renderPattern(ParticleEffect effect,
-                                Image data,
-                                Vec3d origin,
-                                Vec3d delta,
-                                Vec3d color,
-                                boolean mono,
-                                Vec2f size,
-                                int type,
-                                float alpha,
-                                int life,
-                                float scale) {
-        if (ExpMain.disabled) {
+    public static String renderPattern(ParticleEffect effect,
+                                       Image data,
+                                       Vec3d origin,
+                                       Vec3d delta,
+                                       Vec3d color,
+                                       boolean mono,
+                                       Vec2f size,
+                                       int type,
+                                       float alpha,
+                                       int life,
+                                       float scale,
+                                       String id) {
+        if (Main.disabled) {
             return null;
         }
 
@@ -52,6 +57,9 @@ public class ImgRender {
         int h = i.getHeight();
 
         int[][] RGBArray = imageToArray(i, w, h);
+
+        ArrayList<Particle> particles;
+        particles = new ArrayList<>();
 
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
@@ -109,24 +117,42 @@ public class ImgRender {
                 }
 
                 Vec3d position = new Vec3d(origin.x + rx, origin.y + ry, origin.z + rz);
-                ExpMain.configureParticle(effect, position, delta, new Vec3d(r, g, b), a / 255.0f, life, scale);
+                if (id != null) {
+                    Particle particle = Main.constructParticle(
+                            effect, position, delta, new Vec3d(r, g, b), a / 255f, life, scale
+                    );
+                    particles.add(particle);
+                } else {
+                    Main.constructParticle(
+                            effect, position, delta, new Vec3d(r, g, b), a / 255f, life, scale
+                    );
+                }
+            }
+        }
+
+        if (id != null) {
+            try {
+                AnimationMgr.apply(id, particles);
+            } catch (NullPointerException e) {
+                return "指定的标识符不是有效的动画。";
             }
         }
 
         return null;
     }
 
-    static String renderPattern(ParticleEffect effect,
-                                String data,
-                                Vec3d origin,
-                                Vec3d delta,
-                                Vec3d color,
-                                boolean mono,
-                                Vec2f size,
-                                int type,
-                                float alpha,
-                                int life,
-                                float scale) {
+    public static String renderPattern(ParticleEffect effect,
+                                       String data,
+                                       Vec3d origin,
+                                       Vec3d delta,
+                                       Vec3d color,
+                                       boolean mono,
+                                       Vec2f size,
+                                       int type,
+                                       float alpha,
+                                       int life,
+                                       float scale,
+                                       String id) {
         BufferedImage image;
 
         try {
@@ -136,10 +162,10 @@ public class ImgRender {
             return "无法读取指定的图像文件。";
         }
 
-        return renderPattern(effect, image, origin, delta, color, mono, size, type, alpha, life, scale);
+        return renderPattern(effect, image, origin, delta, color, mono, size, type, alpha, life, scale, id);
     }
 
-    public static int[][] imageToArray(BufferedImage bf, int w, int h) {
+    private static int[][] imageToArray(BufferedImage bf, int w, int h) {
         int[] data = new int[w * h];
 
         bf.getRGB(0, 0, w, h, data, 0, w);

@@ -19,7 +19,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "top.frankyang.exp.ExpMain"
+      "top.frankyang.exp.Main"
     ]
   },
   "mixins": [

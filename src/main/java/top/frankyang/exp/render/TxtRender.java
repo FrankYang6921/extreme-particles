@@ -1,13 +1,14 @@
-package top.frankyang.exp;
+package top.frankyang.exp.render;
 
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import top.frankyang.exp.Main;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class TxtRender {
+public final class TxtRender {
     private static final RenderingHints renderingHints;
 
     static {
@@ -17,18 +18,19 @@ public class TxtRender {
         renderingHints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
     }
 
-    static String renderPattern(ParticleEffect effect,
-                                String data,
-                                Vec3d origin,
-                                Vec3d delta,
-                                Vec3d color,
-                                String font,
-                                Vec2f size,
-                                int type,
-                                float alpha,
-                                int life,
-                                float scale) {
-        if (ExpMain.disabled) {
+    public static String renderPattern(ParticleEffect effect,
+                                       String data,
+                                       Vec3d origin,
+                                       Vec3d delta,
+                                       Vec3d color,
+                                       String font,
+                                       Vec2f size,
+                                       int type,
+                                       float alpha,
+                                       int life,
+                                       float scale,
+                                       String id) {
+        if (Main.disabled) {
             return null;
         }
 
@@ -66,10 +68,10 @@ public class TxtRender {
         graphics.setFont(new Font(font, Font.PLAIN, fontSize));
         graphics.drawString(data, 0, fontSize);
 
-        return ImgRender.renderPattern(effect, bufferedImage, origin, delta,null,false, size,type,1, life,scale);
+        return ImgRender.renderPattern(effect, bufferedImage, origin, delta, null, false, size, type, 1, life, scale, id);
     }
 
-    static float getRealLength(String text) {
+    private static float getRealLength(String text) {
         float width = 0;
 
         for (char i : text.toCharArray()) {
@@ -82,7 +84,7 @@ public class TxtRender {
         return width;
     }
 
-    static int getRealWidth(String text, int fontSize) {
+    private static int getRealWidth(String text, int fontSize) {
         float width = getRealLength(text);
         return Math.round(width * fontSize);
     }

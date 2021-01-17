@@ -7,9 +7,9 @@ import java.util.Objects;
 
 public final class AnimationFrame extends Properties {
     public final double pace;
-    public final String trans;
+    public final Transform[] trans;
 
-    public AnimationFrame(double[] motion, int[] color, float alpha, float scale, String trans, Double pace) {  // TODO CSS style transform support
+    public AnimationFrame(double[] motion, int[] color, float alpha, float scale, Transform[] trans, Double pace) {  // TODO CSS style transform support
         super(
                 0, 0, 0, motion[0], motion[1], motion[2], color[0], color[1], color[2], alpha, 0, scale
         );

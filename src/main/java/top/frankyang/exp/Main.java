@@ -24,6 +24,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -134,7 +135,7 @@ public final class Main implements ModInitializer {
             field = clazz.getField("y");
             field.setAccessible(true);
             y = field.getDouble(particle);
-            field = clazz.getField("y");
+            field = clazz.getField("z");
             field.setAccessible(true);
             z = field.getDouble(particle);
         } catch (ReflectiveOperationException e) {

@@ -7,11 +7,11 @@ import net.minecraft.client.util.math.Vector3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.Properties;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.IntStream;
 
 public final class AnimationGroup extends ArrayList<AnimationFrame> {
     private static final Gson gson = new Gson();
@@ -68,15 +68,16 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
             long realFrameCount = Math.round(
                     time / 1000 * Main.frameRate
             );
-            double frameEach = (double) (realFrameCount - 1) / keyFrameCount;
             ArrayList<Properties> realFrames = new ArrayList<>();
 
             for (int i = 0; i < keyFrameCount - 1; i++) {
                 AnimationFrame thisKeyFrame = AnimationGroup.this.get(i);
                 AnimationFrame nextKeyFrame = AnimationGroup.this.get(i + 1);
-                for (int j = 0; j < frameEach; j++) {
+
+                double realForKey = realFrameCount * (nextKeyFrame.pace - thisKeyFrame.pace) / 100;
+                for (int j = 0; j < realForKey; j++) {
                     realFrames.add(  // Make a frame of the animation
-                            thisKeyFrame.compositeWith(nextKeyFrame, j / frameEach * 100)
+                            thisKeyFrame.compositeWith(nextKeyFrame, j / realForKey * 100)
                     );
                 }
             }
@@ -87,25 +88,23 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
             }
 
             for (Properties realFrame : realFrames) {
-                System.out.println(realFrame);
-
                 int bound = particles.size();
                 for (int i = 0; i < bound; i++) {
                     Particle particle = particles.get(i);
                     Vector3d position = positions.get(i);
 
-//                    particle.setPos(
-//                            realFrame.x + position.x,
-//                            realFrame.y + position.y,
-//                            realFrame.z + position.z
-//                    );
-//                    Main.setParticleDelta(particle,
-//                            new Vector3d(
-//                                    realFrame.dx,
-//                                    realFrame.dy,
-//                                    realFrame.dz
-//                            )
-//                    );
+                    particle.setPos(
+                            realFrame.x + position.x,
+                            realFrame.y + position.y,
+                            realFrame.z + position.z
+                    );
+                    Main.setParticleDelta(particle,
+                            new Vector3d(
+                                    realFrame.dx,
+                                    realFrame.dy,
+                                    realFrame.dz
+                            )
+                    );
                     particle.setColor(
                             realFrame.r / 255f,
                             realFrame.g / 255f,

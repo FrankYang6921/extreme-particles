@@ -1,16 +1,14 @@
 package top.frankyang.exp.anime;
 
-import java.util.Arrays;
-
 public final class JsonFrameWrapper {
     public final double[] motion;
     public final int[] color;
     public final float alpha;
     public final float scale;
-    public final String trans;
+    public final Transform[] trans;
     public final Double pace;
 
-    public JsonFrameWrapper(double[] motion, int[] color, float alpha, float scale, String trans, Double pace) {
+    public JsonFrameWrapper(double[] motion, int[] color, float alpha, float scale, Transform[] trans, Double pace) {
         this.motion = motion;
         this.color = color;
         this.alpha = alpha;

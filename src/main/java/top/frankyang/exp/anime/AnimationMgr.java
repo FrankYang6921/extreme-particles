@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public final class AnimationMgr {
-    private static HashMap<String, AnimationGroup> animations = new HashMap<>();
+    private static final HashMap<String, AnimationGroup> animations = new HashMap<>();
 
     public static String register(String id, String expr, double time, String then) {
         try {

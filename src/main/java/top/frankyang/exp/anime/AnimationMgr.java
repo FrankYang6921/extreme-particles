@@ -36,8 +36,8 @@ public final class AnimationMgr {
         return null;
     }
 
-    public static boolean exists(String id) {
-        return animations.containsKey(id);
+    public static boolean isAbsent(String id) {
+        return !animations.containsKey(id);
     }
 
     public static void apply(String id, ArrayList<Particle> particles) {

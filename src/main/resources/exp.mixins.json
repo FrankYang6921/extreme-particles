@@ -6,7 +6,7 @@
   "mixins": [
   ],
   "client": [
-    "FastParticleManager"
+    "BetterParticleMgr"
   ],
   "injectors": {
     "defaultRequire": 1

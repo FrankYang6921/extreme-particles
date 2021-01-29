@@ -7,7 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
-import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.command.argument.Vec2ArgumentType;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.command.CommandManager;
@@ -24,7 +23,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -56,6 +54,8 @@ public final class Main implements ModInitializer {
     public static boolean disabled = false;
     public static boolean useAsync = false;
     public static double frameRate = 30.30303030303030d;
+
+    private static final Object particleAccessLock = new Object();
 
     private static ScriptEngine host;
 
@@ -99,71 +99,7 @@ public final class Main implements ModInitializer {
         }
     }
 
-    public static void setParticleAlpha(Particle particle, float alpha) {
-        Class<?> clazz = particle.getClass();
-        try {
-            Field field = clazz.getField("colorAlpha");
-            field.setAccessible(true);
-            field.set(particle, alpha);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void setParticleLife(Particle particle, int life) {
-        Class<?> clazz = particle.getClass();
-        try {
-            Field field = clazz.getField("maxAge");
-            field.setAccessible(true);
-            field.set(particle, life);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void setParticleScale(Particle particle, float scale) {
-        particle.scale(scale);  // Not implemented yet
-    }
-
-    public static Vector3d getParticlePos(Particle particle) {
-        Class<?> clazz = particle.getClass();
-        double x, y, z;
-        try {
-            Field field = clazz.getField("x");
-            field.setAccessible(true);
-            x = field.getDouble(particle);
-            field = clazz.getField("y");
-            field.setAccessible(true);
-            y = field.getDouble(particle);
-            field = clazz.getField("z");
-            field.setAccessible(true);
-            z = field.getDouble(particle);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-
-        return new Vector3d(x, y, z);
-    }
-
-    public static void setParticleDelta(Particle particle, Vector3d delta) {
-        Class<?> clazz = particle.getClass();
-
-        try {
-            Field field = clazz.getField("velocityX");
-            field.setAccessible(true);
-            field.setDouble(particle, delta.x);
-            field = clazz.getField("velocityY");
-            field.setAccessible(true);
-            field.setDouble(particle, delta.y);
-            field = clazz.getField("velocityZ");
-            field.setAccessible(true);
-            field.setDouble(particle, delta.z);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static synchronized Particle addSyncParticle(
+    private static Particle addSyncParticle(
             ParticleEffect effect,
             double x,
             double y,
@@ -171,7 +107,9 @@ public final class Main implements ModInitializer {
             double dx,
             double dy,
             double dz) {
-        return Objects.requireNonNull(client.particleManager.addParticle(effect, x, y, z, dx, dy, dz));
+        synchronized (particleAccessLock) {
+            return Objects.requireNonNull(client.particleManager.addParticle(effect, x, y, z, dx, dy, dz));
+        }
     }
 
     private static Particle addAsyncParticle(
@@ -214,20 +152,20 @@ public final class Main implements ModInitializer {
             );
         }
         if (alpha >= 0) {
-            setParticleAlpha(particle, alpha);
+            Util.setParticleAlpha(particle, alpha);
         }
         if (life >= 0) {
-            setParticleLife(particle, life);
+            Util.setParticleLife(particle, life);
         }
         if (scale >= 0) {
-            setParticleScale(particle, scale);
+            Util.setParticleScale(particle, scale);
         }
 
         return particle;
     }
 
     @SuppressWarnings("unchecked")
-    private static synchronized Map<ParticleTextureSheet, Queue<Particle>> getParticles() {
+    private static Map<ParticleTextureSheet, Queue<Particle>> getParticles() {
         ParticleManager mgr = client.particleManager;
 
         Class<?> clazz = mgr.getClass();
@@ -251,7 +189,7 @@ public final class Main implements ModInitializer {
         particles.forEach((particleTextureSheet, queue) -> {
             // For every single particle
             for (Particle particle : queue) {
-                setParticleAlpha(particle, 1);
+                Util.setParticleAlpha(particle, 1);
             }
         });
     }
@@ -263,7 +201,7 @@ public final class Main implements ModInitializer {
         particles.forEach((particleTextureSheet, queue) -> {
             // For every single particle
             for (Particle particle : queue) {
-                setParticleAlpha(particle, 0);
+                Util.setParticleAlpha(particle, 0);
             }
         });
     }

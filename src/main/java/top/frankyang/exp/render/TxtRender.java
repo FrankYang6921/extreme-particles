@@ -15,7 +15,9 @@ public final class TxtRender {
         renderingHints = new RenderingHints(null);
         renderingHints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         renderingHints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        renderingHints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+        renderingHints.put(
+                RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB
+        );
     }
 
     public static String renderPattern(ParticleEffect effect,
@@ -52,12 +54,19 @@ public final class TxtRender {
 
         size = new Vec2f(width, height);
 
-        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage bufferedImage = new BufferedImage(
+                width, height, BufferedImage.TYPE_INT_ARGB  // With alpha
+        );
         Graphics2D graphics = (Graphics2D) bufferedImage.getGraphics();
 
         graphics.setRenderingHints(renderingHints);
 
-        graphics.setColor(new Color(255, 255, 255, 0));
+        graphics.setColor(new Color(
+                255,
+                255,
+                255,
+                0
+        ));
         graphics.fillRect(0, 0, width, height);
         graphics.setColor(new Color(
                 (int) color.x,
@@ -65,7 +74,9 @@ public final class TxtRender {
                 (int) color.z,
                 (int) alpha * 255
         ));
-        graphics.setFont(new Font(font, Font.PLAIN, fontSize));
+        graphics.setFont(
+                new Font(font, Font.PLAIN, fontSize)
+        );
         graphics.drawString(data, 0, fontSize);
 
         return ImgRender.renderPattern(effect, bufferedImage, origin, delta, null, false, size, type, 1, life, scale, id);

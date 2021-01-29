@@ -37,15 +37,26 @@ public final class ImgRender {
             return null;
         }
 
+        if ((type | 31) > 31) {
+            return "无法处理像素，因为指定的类型不合法。";
+        }
+
+        if ((type & 8) == 0) {
+            return "无法处理像素，因为没有指定生成平面。";
+        }
+
+        if (id != null && AnimationMgr.isAbsent(id)) {
+            return "指定的标识符不是有效的动画。";
+        }
+
         BufferedImage i;
 
         if (!size.equals(Vec2f.ZERO)) {
             Image scaled = data.getScaledInstance(
-                    (int) size.x, (int) size.y, Image.SCALE_SMOOTH
+                    (int) size.x, (int) size.y, BufferedImage.SCALE_SMOOTH
             );
             i = new BufferedImage(
-                    (int) size.x, (int) size.y,
-                    BufferedImage.TYPE_INT_ARGB
+                    (int) size.x, (int) size.y, BufferedImage.TYPE_INT_ARGB
             );
             Graphics2D cxt = i.createGraphics();
             cxt.drawImage(scaled, 0, 0, null);
@@ -56,52 +67,52 @@ public final class ImgRender {
         int w = i.getWidth();
         int h = i.getHeight();
 
-        int[][] RGBArray = imageToArray(i, w, h);
+        // Use cache to improve speed
+        int[][] pixels = getPixels(i, w, h);
 
         ArrayList<Particle> particles;
         particles = new ArrayList<>();
 
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                int px = RGBArray[x][y];
+                int px = pixels[x][y];
+
                 int b = px & 0xff;
                 int g = (px >> 8) & 0xff;
                 int r = (px >> 16) & 0xff;
                 int a = (px >> 24) & 0xff;
 
-                if (mono) {
+                if (mono) {  // Add monochrome filter
                     int k = (r + g + b) / 3;
                     r = k;
                     g = k;
                     b = k;
                 }
 
-                if (color != null) {
+                if (color != null) {  // Add color filter
                     r *= color.x / 255.;
                     g *= color.y / 255.;
                     b *= color.z / 255.;
                 }
 
-                if (1 - alpha > 1e-5f) {
+                if (1 - alpha > 1e-5f) {  // Add alpha filter
                     a *= alpha;
                 }
 
-                if (a == 0) {
+                if (a == 0) {  // Hide invisible particles
                     continue;
                 }
 
-                double rx = 0,
-                        ry = 0,
-                        rz = 0;
-
-                if (type > 31) {
-                    return "无法处理像素，因为指定的类型不合法。";
-                }
+                // Build particles
 
                 int tx = (type & HR) != 0 ? x : -x;
                 int ty = (type & VR) != 0 ? y : -y;
                 double ox = (type & HR) != 0 ? 0 : w * .1 * scale;
                 double oy = (type & VR) != 0 ? 0 : h * .1 * scale;
+
+                double rx = 0,
+                        ry = 0,
+                        rz = 0;
 
                 if ((type & XY) != 0) {
                     rx = tx * .1 * scale + ox;
@@ -113,7 +124,8 @@ public final class ImgRender {
                     rz = tx * .1 * scale + ox;
                     ry = ty * .1 * scale + oy;
                 } else {
-                    return "无法处理像素，因为没有指定生成平面。";
+                    rx = tx * .1 * scale + ox;
+                    ry = ty * .1 * scale + oy;
                 }
 
                 Vec3d position = new Vec3d(origin.x + rx, origin.y + ry, origin.z + rz);
@@ -131,11 +143,7 @@ public final class ImgRender {
         }
 
         if (id != null) {
-            try {
-                AnimationMgr.apply(id, particles);
-            } catch (NullPointerException e) {
-                return "指定的标识符不是有效的动画。";
-            }
+            AnimationMgr.apply(id, particles);
         }
 
         return null;
@@ -165,19 +173,16 @@ public final class ImgRender {
         return renderPattern(effect, image, origin, delta, color, mono, size, type, alpha, life, scale, id);
     }
 
-    private static int[][] imageToArray(BufferedImage bf, int w, int h) {
-        int[] data = new int[w * h];
+    private static int[][] getPixels(BufferedImage bf, int w, int h) {
+        int[] rawPixels = new int[w * h];
+        int[][] pixels = new int[w][h];
 
-        bf.getRGB(0, 0, w, h, data, 0, w);
+        bf.getRGB(0, 0, w, h, rawPixels, 0, w);
 
-        int[][] RGBArray = new int[w][h];
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                pixels[x][y] = rawPixels[y * w + x];
 
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                RGBArray[x][y] = data[y * w + x];
-            }
-        }
-
-        return RGBArray;
+        return pixels;
     }
 }

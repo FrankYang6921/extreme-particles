@@ -14,9 +14,12 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Mixin(ParticleManager.class)
-public abstract class FastParticleManager implements ResourceReloadListener {
+public abstract class BetterParticleMgr implements ResourceReloadListener {
     @Shadow
     protected ClientWorld world;
     @Final
@@ -33,24 +36,22 @@ public abstract class FastParticleManager implements ResourceReloadListener {
     protected abstract void tickParticles(Collection<Particle> collection);
 
     public void tick() {
-        if (!this.particles.isEmpty()) {
-            this.particles.forEach((particleTextureSheet, queue) -> {
-                this.world.getProfiler().push(particleTextureSheet.toString());
-                this.tickParticles(queue);
-                this.world.getProfiler().pop();
-            });
+        Map<ParticleTextureSheet, Queue<Particle>> thisParticles = this.particles;
+
+        if (!thisParticles.isEmpty()) {
+            thisParticles.forEach(
+                    (particleTextureSheet, queue) -> this.tickParticles(queue)
+            );
         }
 
         if (!this.newEmitterParticles.isEmpty()) {
-            for (EmitterParticle emitterParticle : this.newEmitterParticles) {
-                emitterParticle.tick();
-            }
+            this.newEmitterParticles.forEach(EmitterParticle::tick);
         }
 
         Particle particle;
         if (!this.newParticles.isEmpty()) {
             while ((particle = this.newParticles.poll()) != null) {
-                this.particles.computeIfAbsent(
+                thisParticles.computeIfAbsent(
                         particle.getType(), (particleTextureSheet) -> new ArrayDeque<>()
                 ).add(particle);
             }

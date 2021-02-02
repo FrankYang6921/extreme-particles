@@ -4,24 +4,62 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.util.math.Vector3d;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "JavaReflectionMemberAccess"})
 public final class Util {
-    public static Vector3d getParticleColor(Particle particle) {
-        Class<?> clazz = particle.getClass();
+    private static final Class<Particle> clazz = Particle.class;
+    private static final Field rField,
+            gField,
+            bField,
+            aField,
+            ageField,
+            xField,
+            yField,
+            zField,
+            dxField,
+            dyField,
+            dzField;
+    private static final Map<Particle, Float> mapping = new HashMap<>();
 
+    static {
+        try {
+            rField = clazz.getField("colorRed");
+            gField = clazz.getField("colorGreen");
+            bField = clazz.getField("colorBlue");
+            aField = clazz.getField("colorAlpha");
+            ageField = clazz.getField("maxAge");
+            xField = clazz.getField("x");
+            yField = clazz.getField("y");
+            zField = clazz.getField("z");
+            dxField = clazz.getField("velocityX");
+            dyField = clazz.getField("velocityY");
+            dzField = clazz.getField("velocityZ");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+
+        rField.setAccessible(true);
+        gField.setAccessible(true);
+        bField.setAccessible(true);
+        aField.setAccessible(true);
+        ageField.setAccessible(true);
+        xField.setAccessible(true);
+        yField.setAccessible(true);
+        zField.setAccessible(true);
+        dxField.setAccessible(true);
+        dyField.setAccessible(true);
+        dzField.setAccessible(true);
+    }
+
+    public static Vector3d getParticleColor(Particle particle) {
         double x, y, z;
         try {
-            Field field = clazz.getField("colorRed");
-            field.setAccessible(true);
-            x = field.getDouble(particle);
-            field = clazz.getField("colorGreen");
-            field.setAccessible(true);
-            y = field.getDouble(particle);
-            field = clazz.getField("colorBlue");
-            field.setAccessible(true);
-            z = field.getDouble(particle);
+            x = rField.getDouble(particle);
+            y = gField.getDouble(particle);
+            z = bField.getDouble(particle);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -30,89 +68,68 @@ public final class Util {
     }
 
     public static void setParticleColor(Particle particle, Vector3d color) {
-        Class<?> clazz = particle.getClass();
-
         try {
-            Field field = clazz.getField("colorRed");
-            field.setAccessible(true);
-            field.setDouble(particle, color.x);
-            field = clazz.getField("colorGreen");
-            field.setAccessible(true);
-            field.setDouble(particle, color.y);
-            field = clazz.getField("colorBlue");
-            field.setAccessible(true);
-            field.setDouble(particle, color.z);
+            rField.setDouble(particle, color.x);
+            gField.setDouble(particle, color.y);
+            bField.setDouble(particle, color.z);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static float getParticleAlpha(Particle particle) {
-        Class<?> clazz = particle.getClass();
         try {
-            Field field = clazz.getField("colorAlpha");
-            field.setAccessible(true);
-            return field.getFloat(particle);
+            return aField.getFloat(particle);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void setParticleAlpha(Particle particle, float alpha) {
-        Class<?> clazz = particle.getClass();
         try {
-            Field field = clazz.getField("colorAlpha");
-            field.setAccessible(true);
-            field.set(particle, alpha);
+            aField.set(particle, alpha);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static int getParticleLife(Particle particle) {
-        Class<?> clazz = particle.getClass();
         try {
-            Field field = clazz.getField("maxAge");
-            field.setAccessible(true);
-            return field.getInt(particle);
+            return ageField.getInt(particle);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void setParticleLife(Particle particle, int life) {
-        Class<?> clazz = particle.getClass();
         try {
-            Field field = clazz.getField("maxAge");
-            field.setAccessible(true);
-            field.set(particle, life);
+            ageField.setInt(particle, life);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static float getParticleScale(Particle particle) {
-        return Float.NaN;  // Not implemented
+        return mapping.getOrDefault(particle, 1f);
     }
 
     public static void setParticleScale(Particle particle, float scale) {
-        particle.scale(scale);  // Not implemented
+        float currentScale = getParticleScale(particle);
+        float relativeScale = scale / currentScale;
+        particle.scale(relativeScale);
+        mapping.put(particle, scale);
+    }
+
+    public static void clearScaleCache() {
+        mapping.entrySet().removeIf(e -> !e.getKey().isAlive());
     }
 
     public static Vector3d getParticlePos(Particle particle) {
-        Class<?> clazz = particle.getClass();
-
         double x, y, z;
         try {
-            Field field = clazz.getField("x");
-            field.setAccessible(true);
-            x = field.getDouble(particle);
-            field = clazz.getField("y");
-            field.setAccessible(true);
-            y = field.getDouble(particle);
-            field = clazz.getField("z");
-            field.setAccessible(true);
-            z = field.getDouble(particle);
+            x = xField.getDouble(particle);
+            y = yField.getDouble(particle);
+            z = zField.getDouble(particle);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -121,37 +138,21 @@ public final class Util {
     }
 
     public static void setParticlePos(Particle particle, Vector3d pos) {
-        Class<?> clazz = particle.getClass();
-
         try {
-            Field field = clazz.getField("x");
-            field.setAccessible(true);
-            field.setDouble(particle, pos.x);
-            field = clazz.getField("y");
-            field.setAccessible(true);
-            field.setDouble(particle, pos.y);
-            field = clazz.getField("z");
-            field.setAccessible(true);
-            field.setDouble(particle, pos.z);
+            xField.setDouble(particle, pos.x);
+            yField.setDouble(particle, pos.y);
+            zField.setDouble(particle, pos.z);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static Vector3d getParticleDelta(Particle particle) {
-        Class<?> clazz = particle.getClass();
-
         double x, y, z;
         try {
-            Field field = clazz.getField("velocityX");
-            field.setAccessible(true);
-            x = field.getDouble(particle);
-            field = clazz.getField("velocityY");
-            field.setAccessible(true);
-            y = field.getDouble(particle);
-            field = clazz.getField("velocityZ");
-            field.setAccessible(true);
-            z = field.getDouble(particle);
+            x = dxField.getDouble(particle);
+            y = dyField.getDouble(particle);
+            z = dzField.getDouble(particle);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -160,18 +161,10 @@ public final class Util {
     }
 
     public static void setParticleDelta(Particle particle, Vector3d delta) {
-        Class<?> clazz = particle.getClass();
-
         try {
-            Field field = clazz.getField("velocityX");
-            field.setAccessible(true);
-            field.setDouble(particle, delta.x);
-            field = clazz.getField("velocityY");
-            field.setAccessible(true);
-            field.setDouble(particle, delta.y);
-            field = clazz.getField("velocityZ");
-            field.setAccessible(true);
-            field.setDouble(particle, delta.z);
+            dxField.setDouble(particle, delta.x);
+            dyField.setDouble(particle, delta.y);
+            dzField.setDouble(particle, delta.z);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }

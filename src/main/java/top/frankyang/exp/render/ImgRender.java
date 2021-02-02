@@ -37,11 +37,11 @@ public final class ImgRender {
             return null;
         }
 
-        if ((type | 31) > 31) {
+        if (type > 31) {
             return "无法处理像素，因为指定的类型不合法。";
         }
 
-        if ((type & 8) == 0) {
+        if (type < 1) {
             return "无法处理像素，因为没有指定生成平面。";
         }
 

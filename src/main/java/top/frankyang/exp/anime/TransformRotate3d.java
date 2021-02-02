@@ -11,19 +11,19 @@ public class TransformRotate3d extends Transform {
         );
     }
 
-    public static class TransformRotateZ extends TransformRotate3d {
+    public static final class TransformRotateZ extends TransformRotate3d {
         public TransformRotateZ(Double a) {
             super(0d, 0d, 1d, a);
         }
     }
 
-    public static class TransformRotateY extends TransformRotate3d {
+    public static final class TransformRotateY extends TransformRotate3d {
         public TransformRotateY(Double a) {
             super(0d, 1d, 0d, a);
         }
     }
 
-    public static class TransformRotateX extends TransformRotate3d {
+    public static final class TransformRotateX extends TransformRotate3d {
         public TransformRotateX(Double a) {
             super(1d, 0d, 0d, a);
         }

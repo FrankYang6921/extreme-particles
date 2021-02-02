@@ -1,4 +1,4 @@
 package top.frankyang.exp.anime;
 
-public class TransformMatrix3d extends Transform {
+public final class TransformMatrix3d extends Transform {
 }

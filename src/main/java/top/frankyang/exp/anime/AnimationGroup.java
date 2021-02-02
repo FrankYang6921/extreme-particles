@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static top.frankyang.exp.Util.clearScaleCache;
 import static top.frankyang.exp.Util.getRect3d;
 
 public final class AnimationGroup extends ArrayList<AnimationFrame> {
@@ -122,6 +123,10 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                     Particle particle = particles.get(i);
                     Vector3d position = positions.get(i);
 
+                    if (!particle.isAlive()) {
+                        continue;
+                    }
+
                     if (canDoTransform) {
                         double rx = position.x - mx + ox;
                         double ry = position.y - my + oy;
@@ -145,10 +150,12 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                         );
                     }
                     if (canDoColor) {
-                        particle.setColor(
-                                realFrame.r / 255f,
-                                realFrame.g / 255f,
-                                realFrame.b / 255f
+                        Util.setParticleColor(particle,
+                                new Vector3d(
+                                        realFrame.r / 255f,
+                                        realFrame.g / 255f,
+                                        realFrame.b / 255f
+                                )
                         );
                     }
                     if (canDoAlpha) {
@@ -165,6 +172,8 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                     throw new RuntimeException(e);
                 }
             }
+
+            clearScaleCache();
 
             if (nextGroup != null) {
                 nextGroup.apply(particles);

@@ -46,7 +46,7 @@ import static net.minecraft.command.argument.Vec3ArgumentType.vec3;
 
 public final class Main implements ModInitializer {
     private static final int MAJOR_VERSION = 0;
-    private static final int MINOR_VERSION = 2;
+    private static final int MINOR_VERSION = 3;
     private static final int REVISION = 0;
 
     private static final MinecraftClient client = MinecraftClient.getInstance();

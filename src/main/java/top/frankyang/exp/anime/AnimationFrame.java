@@ -8,31 +8,32 @@ import java.util.Objects;
 import static top.frankyang.exp.anime.Transform.NOTHING;
 
 public final class AnimationFrame extends Wrapper {
-    public final double percentage;
+    public final double pace;
+
     public final Transform[] transforms;
     public final Transform transform;
 
-    public AnimationFrame(double[] origin, double[] motion, int[] color, float alpha, float scale, Transform[] transforms, Double percentage) {  // TODO CSS style transform support
+    public AnimationFrame(double[] origin, double[] motion, int[] color, float alpha, float scale, Double pace, Transform[] transforms) {
         super(
                 origin[0], origin[1], origin[2], motion[0], motion[1], motion[2], color[0], color[1], color[2], alpha, 0, scale
         );
 
         for (double i : motion) {
-            if (i < -10d || i > 10d) {
-                throw new IllegalArgumentException(String.format("动量的每个值仅能是[-10, 10]的浮点，而非%s。", Arrays.toString(motion)));
+            if ((i < -10d || i > 10d) && !Double.isNaN(i)) {
+                throw new IllegalArgumentException(String.format("动量的每个值仅能是[-10, 10]的浮点或Double.NaN，而非%s。", Arrays.toString(motion)));
             }
         }
 
         for (int i : color) {
-            if (i < 0 || i > 255) {
-                throw new IllegalArgumentException(String.format("颜色的每个值仅能是[0, 255]的整数，而非%s。", Arrays.toString(color)));
+            if ((i < 0 && i != Integer.MIN_VALUE) || i > 255) {
+                throw new IllegalArgumentException(String.format("颜色的每个值仅能是[0, 255]的整数或-2147483648，而非%s。", Arrays.toString(color)));
             }
         }
 
-        if (percentage == null || percentage < 0 || percentage > 100) {
-            throw new IllegalArgumentException(String.format("步进仅能是[0, 100]的整数，而非%s。", percentage));
+        if (pace == null || pace < 0 || pace > 100) {
+            throw new IllegalArgumentException(String.format("步进仅能是[0, 100]的整数，而非%s。", pace));
         }
-        this.percentage = percentage;
+        this.pace = pace;
         this.transforms = transforms;
 
         if (this.transforms.length > 1) {
@@ -46,14 +47,35 @@ public final class AnimationFrame extends Wrapper {
     }
 
     private static int compositeVal(int a, int b, double pace) {
+        if (a == Integer.MIN_VALUE && b == Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        } else if (a == Integer.MIN_VALUE) {
+            return b;
+        } else if (b == Integer.MIN_VALUE) {
+            return a;
+        }
         return (int) (a * (1 - pace / 100d) + b * pace / 100d);
     }
 
     private static float compositeVal(float a, float b, double pace) {
+        if (Float.isNaN(a) && Float.isNaN(b)) {
+            return Float.NaN;
+        } else if (Float.isNaN(a)) {
+            return b;
+        } else if (Float.isNaN(b)) {
+            return a;
+        }
         return (float) (a * (1 - pace / 100d) + b * pace / 100d);
     }
 
     private static double compositeVal(double a, double b, double pace) {
+        if (Double.isNaN(a) && Double.isNaN(b)) {
+            return Double.NaN;
+        } else if (Double.isNaN(a)) {
+            return b;
+        } else if (Double.isNaN(b)) {
+            return a;
+        }
         return a * (1 - pace / 100d) + b * pace / 100d;
     }
 
@@ -77,7 +99,7 @@ public final class AnimationFrame extends Wrapper {
                 new double[]{x, y, z},
                 new double[]{dx, dy, dz},
                 new int[]{r, g, b},
-                a, s, t, 0d
+                a, s, 0d, t
         );
     }
 }

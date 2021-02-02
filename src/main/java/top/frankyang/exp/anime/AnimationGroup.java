@@ -86,7 +86,7 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                 AnimationFrame thisKeyFrame = AnimationGroup.this.get(i);
                 AnimationFrame nextKeyFrame = AnimationGroup.this.get(i + 1);
 
-                double realForKey = realFrameCount * (nextKeyFrame.percentage - thisKeyFrame.percentage) / 100;
+                double realForKey = realFrameCount * (nextKeyFrame.pace - thisKeyFrame.pace) / 100;
                 for (int j = 0; j < realForKey; j++) {
                     realFrames.add(  // Make a frame of the animation
                             thisKeyFrame.compositeWith(nextKeyFrame, j / realForKey * 100)
@@ -106,10 +106,14 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
             for (AnimationFrame realFrame : realFrames) {
                 int bound = particles.size();
 
-                boolean canDoDelta = realFrame.dx != 0 || realFrame.dy != 0 || realFrame.dz != 0;
-                boolean canDoColor = realFrame.r != 0 || realFrame.g != 0 || realFrame.b != 0;
-                boolean canDoAlpha = realFrame.a != 0;
-                boolean canDoScale = realFrame.s != 0;
+                boolean canDoDelta = !Double.isNaN(realFrame.dx) ||
+                        !Double.isNaN(realFrame.dy) ||
+                        !Double.isNaN(realFrame.dz);
+                boolean canDoColor = realFrame.r != Integer.MIN_VALUE ||
+                        realFrame.g != Integer.MIN_VALUE ||
+                        realFrame.b != Integer.MIN_VALUE;
+                boolean canDoAlpha = !Float.isNaN(realFrame.a);
+                boolean canDoScale = !Float.isNaN(realFrame.s);
                 boolean canDoTransform = !realFrame.transform.equals(Transform.NOTHING);
                 double ox = 0, oy = 0, oz = 0;
 

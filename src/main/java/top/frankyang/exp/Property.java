@@ -1,11 +1,11 @@
 package top.frankyang.exp;
 
-public class Wrapper {
+public class Property {
     public final double x, y, z, dx, dy, dz;
     public final float a, s;
     public final int r, g, b, l;
 
-    public Wrapper(double x, double y, double z, double dx, double dy, double dz, int r, int g, int b, float a, int l, float s) {
+    public Property(double x, double y, double z, double dx, double dy, double dz, int r, int g, int b, float a, int l, float s) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -22,7 +22,7 @@ public class Wrapper {
 
     @Override
     public String toString() {
-        return "Properties{" +
+        return "Property{" +
                 "x=" + x +
                 ", y=" + y +
                 ", z=" + z +

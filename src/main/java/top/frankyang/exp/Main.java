@@ -1,7 +1,7 @@
 package top.frankyang.exp;
 
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.api.ModInitializer;
+import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.Particle;
@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
@@ -44,18 +46,17 @@ import static net.minecraft.command.argument.Vec3ArgumentType.getVec3;
 import static net.minecraft.command.argument.Vec3ArgumentType.vec3;
 
 
-public final class Main implements ModInitializer {
+public final class Main implements ClientModInitializer {
+    public static final ExecutorService pool = Executors.newCachedThreadPool();
     private static final int MAJOR_VERSION = 0;
     private static final int MINOR_VERSION = 3;
-    private static final int REVISION = 0;
-
+    private static final int REVISION = 2;
     private static final MinecraftClient client = MinecraftClient.getInstance();
-
+    private static final Object lock = 0;
     public static boolean disabled = false;
     public static boolean useAsync = false;
-    public static double frameRate = 30.30303030303030d;
-
-    private static final Object particleAccessLock = new Object();
+    public static boolean lifeFix = true;
+    public static double frameRate = 30.3d;
 
     private static ScriptEngine host;
 
@@ -107,7 +108,7 @@ public final class Main implements ModInitializer {
             double dx,
             double dy,
             double dz) {
-        synchronized (particleAccessLock) {
+        synchronized (lock) {
             return Objects.requireNonNull(client.particleManager.addParticle(effect, x, y, z, dx, dy, dz));
         }
     }
@@ -155,7 +156,12 @@ public final class Main implements ModInitializer {
             Util.setParticleAlpha(particle, alpha);
         }
         if (life >= 0) {
-            Util.setParticleLife(particle, life);
+            if (lifeFix) {
+                Util.setParticleLife(particle, 2147483647);
+                pool.submit(new ParticleDaemon(particle, life));
+            } else {
+                Util.setParticleLife(particle, life);
+            }
         }
         if (scale >= 0) {
             Util.setParticleScale(particle, scale);
@@ -235,14 +241,16 @@ public final class Main implements ModInitializer {
         try {  // Remove the latency at the first command call
             host.eval("0");
         } catch (ScriptException e) {
-            e.printStackTrace();
+            throw new RuntimeException(
+                    "OpenJDK above 15 is not allowed to use."
+            );
         }
 
         return host;
     }
 
     @Override
-    public void onInitialize() {
+    public void onInitializeClient() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(CommandManager.literal("exp")
                     .then(CommandManager.literal("about").executes(context -> {
@@ -439,6 +447,18 @@ public final class Main implements ModInitializer {
                         return 1;
                     })))
             ));
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("lifeFix").then(CommandManager.argument("value", bool()).executes(context -> {
+                        lifeFix = getBool(context, "value");
+                        context.getSource().sendFeedback(new LiteralText("寿命修复状态已更新。"), false);
+                        return 1;
+                    })))
+            ));
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("frameRate").then(CommandManager.argument("value", doubleArg(1)).executes(context -> {
+                        frameRate = getDouble(context, "value");
+                        context.getSource().sendFeedback(new LiteralText("目标帧率已更新。"), false);
+                        return 1;
+                    })))
+            ));
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("utilities").then(CommandManager.literal("showAll").executes(context -> {
                         showAll();
@@ -461,5 +481,39 @@ public final class Main implements ModInitializer {
                     }))
             ));
         });
+    }
+
+    public final static class ParticleDaemon implements Runnable {
+        private final Particle particle;
+        private final int maxAge;
+
+        public ParticleDaemon(Particle particle, int maxAge) {
+            this.particle = particle;
+            this.maxAge = maxAge;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(Math.max(0, maxAge * 50 - 500));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            float alpha = Util.getParticleAlpha(particle);
+            float scale = Util.getParticleScale(particle);
+
+            for (long i = Math.round(frameRate / 2); i > 0; i--) {
+                Util.setParticleAlpha(particle, alpha * i / 30);
+                Util.setParticleScale(particle, scale * i / 30);
+
+                try {
+                    Thread.sleep(Math.round(1000 / Main.frameRate));  // ~ 30 FPS
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            particle.markDead();
+        }
     }
 }

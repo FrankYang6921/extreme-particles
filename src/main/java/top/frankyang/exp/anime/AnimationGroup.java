@@ -56,20 +56,19 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
     }
 
     public void apply(List<Particle> particles) {
-        WorkerThread thread = this.new WorkerThread(particles, nextGroup);
-        thread.setDaemon(true);
-        thread.start();
+        Worker thread = this.new Worker(particles, nextGroup);
+        Main.pool.submit(thread);
     }
 
     public void setNextGroup(AnimationGroup nextGroup) {
         this.nextGroup = Objects.requireNonNull(nextGroup);
     }
 
-    private final class WorkerThread extends Thread {
+    private final class Worker implements Runnable {
         private final List<Particle> particles;
         private final AnimationGroup nextGroup;
 
-        public WorkerThread(List<Particle> particles, AnimationGroup nextGroup) {
+        public Worker(List<Particle> particles, AnimationGroup nextGroup) {
             this.particles = particles;
             this.nextGroup = nextGroup;
         }

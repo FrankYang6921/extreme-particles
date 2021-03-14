@@ -4,6 +4,7 @@
   "package": "top.frankyang.exp.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "ReflectiveParticle"
   ],
   "client": [
     "BetterParticleMgr"

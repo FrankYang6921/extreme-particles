@@ -4,7 +4,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
-import top.frankyang.exp.Wrapper;
+import top.frankyang.exp.Property;
 import top.frankyang.exp.anime.AnimationMgr;
 
 import javax.script.ScriptEngine;
@@ -15,7 +15,7 @@ import java.util.List;
 public final class Functional {
     private static final ScriptEngine host = Main.getScriptHost();
 
-    private static Wrapper getProperties(String expr, Vec3d origin, double thisTick, double finalTick) {
+    private synchronized static Property getProperties(String expr, Vec3d origin, double thisTick, double finalTick) {
         double x, y, z, dx, dy, dz;
         float a, s;
         int r, g, b, l;
@@ -71,7 +71,7 @@ public final class Functional {
             throw new RuntimeException(e);
         }
 
-        return new Wrapper(x, y, z, dx, dy, dz, r, g, b, a, l, s);
+        return new Property(x, y, z, dx, dy, dz, r, g, b, a, l, s);
     }
 
     public static String renderPattern(ParticleEffect effect,
@@ -90,10 +90,10 @@ public final class Functional {
 
         double frameTime = time / count;
 
-        List<Wrapper> props = new ArrayList<>();
+        List<Property> props = new ArrayList<>();
 
         for (float i = 0; i < time; i += frameTime) {
-            Wrapper prop;
+            Property prop;
             try {
                 prop = getProperties(
                         data, origin, i / 1e3, time / 1e3
@@ -105,24 +105,23 @@ public final class Functional {
             props.add(prop);
         }
 
-        WorkerThread thread = new WorkerThread(
+        Worker thread = new Worker(
                 effect, props, origin, frameTime, count, id
         );
-        thread.setDaemon(true);
-        thread.start();
+        Main.pool.submit(thread);
 
         return null;
     }
 
-    private final static class WorkerThread extends Thread {
+    private final static class Worker implements Runnable {
         private final ParticleEffect effect;
-        private final List<Wrapper> props;
+        private final List<Property> props;
         private final Vec3d origin;
         private final double frame;
         private final int count;
         private final String id;
 
-        public WorkerThread(ParticleEffect effect, List<Wrapper> props, Vec3d origin, double frame, int count, String id) {
+        public Worker(ParticleEffect effect, List<Property> props, Vec3d origin, double frame, int count, String id) {
             super();
             this.effect = effect;
             this.props = props;
@@ -144,7 +143,7 @@ public final class Functional {
             particles = new ArrayList<>();
 
             long i = 0;
-            for (Wrapper data : props) {
+            for (Property data : props) {
                 Vec3d pos = new Vec3d(
                         data.x + origin.x,
                         data.y + origin.y,

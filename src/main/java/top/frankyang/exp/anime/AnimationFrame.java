@@ -1,13 +1,13 @@
 package top.frankyang.exp.anime;
 
-import top.frankyang.exp.Wrapper;
+import top.frankyang.exp.Property;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 import static top.frankyang.exp.anime.Transform.NOTHING;
 
-public final class AnimationFrame extends Wrapper {
+public final class AnimationFrame extends Property {
     public final double pace;
 
     public final Transform[] transforms;

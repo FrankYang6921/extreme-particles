@@ -8,7 +8,7 @@ import top.frankyang.exp.Main;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public final class TxtRender {
+public abstract class TxtRender {
     private static final RenderingHints renderingHints;
 
     static {

@@ -5,9 +5,9 @@ import top.frankyang.exp.Property;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static top.frankyang.exp.anime.Transform.NOTHING;
+import static top.frankyang.exp.anime.Transform.EMPTY;
 
-public final class AnimationFrame extends Property {
+public class AnimationFrame extends Property {
     public final double pace;
 
     public final Transform[] transforms;
@@ -38,11 +38,11 @@ public final class AnimationFrame extends Property {
 
         if (this.transforms.length > 1) {
             transform = Arrays.stream(this.transforms)
-                    .reduce(NOTHING, Transform::compositeWith);
+                    .reduce(EMPTY, Transform::compositeWith);
         } else if (this.transforms.length == 1) {
             transform = this.transforms[0];  // Only one, no composition
         } else {
-            transform = Transform.NOTHING;  // Nothing here, by default
+            transform = Transform.EMPTY;  // Nothing here, by default
         }
     }
 

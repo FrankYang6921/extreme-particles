@@ -12,7 +12,7 @@ import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Functional {
+public abstract class Functional {
     private static final ScriptEngine host = Main.getScriptHost();
 
     private synchronized static Property getProperties(String expr, Vec3d origin, double thisTick, double finalTick) {
@@ -105,15 +105,15 @@ public final class Functional {
             props.add(prop);
         }
 
-        Worker thread = new Worker(
+        Daemon daemon = new Daemon(
                 effect, props, origin, frameTime, count, id
         );
-        Main.pool.submit(thread);
+        Main.pool.submit(daemon);
 
         return null;
     }
 
-    private final static class Worker implements Runnable {
+    private  static class Daemon implements Runnable {
         private final ParticleEffect effect;
         private final List<Property> props;
         private final Vec3d origin;
@@ -121,7 +121,7 @@ public final class Functional {
         private final int count;
         private final String id;
 
-        public Worker(ParticleEffect effect, List<Property> props, Vec3d origin, double frame, int count, String id) {
+        public Daemon(ParticleEffect effect, List<Property> props, Vec3d origin, double frame, int count, String id) {
             super();
             this.effect = effect;
             this.props = props;

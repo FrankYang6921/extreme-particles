@@ -249,18 +249,20 @@ public final class Main implements ClientModInitializer {
         return host;
     }
 
+    private static int about(CommandContext<ServerCommandSource> context) {
+        context.getSource().sendFeedback(new LiteralText(
+                String.format(
+                        "§e§lExtreme Particles§r v%d.%d.%d 是§9§nkworker§r制作的的自由软件。遵循GPLv3协议。", MAJOR_VERSION, MINOR_VERSION, REVISION
+                )
+        ), false);
+        return 1;
+    }
+
     @Override
     public void onInitializeClient() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(CommandManager.literal("exp")
-                    .then(CommandManager.literal("about").executes(context -> {
-                        context.getSource().sendFeedback(new LiteralText(
-                                String.format(
-                                        "§e§lExtreme Particles§r v%d.%d.%d 是§9§nkworker§r制作的的自由软件。遵循GPLv3协议。", MAJOR_VERSION, MINOR_VERSION, REVISION
-                                )
-                        ), false);
-                        return 1;
-                    }))
+                    .then(CommandManager.literal("about").executes(Main::about))
             );
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("primitive")
@@ -484,11 +486,11 @@ public final class Main implements ClientModInitializer {
     }
 
     public final static class ParticleDaemon implements Runnable {
-        private final Particle particle;
+        private final Particle master;
         private final int maxAge;
 
-        public ParticleDaemon(Particle particle, int maxAge) {
-            this.particle = particle;
+        public ParticleDaemon(Particle master, int maxAge) {
+            this.master = master;
             this.maxAge = maxAge;
         }
 
@@ -500,12 +502,12 @@ public final class Main implements ClientModInitializer {
                 throw new RuntimeException(e);
             }
 
-            float alpha = Util.getParticleAlpha(particle);
-            float scale = Util.getParticleScale(particle);
+            float alpha = Util.getParticleAlpha(master);
+            float scale = Util.getParticleScale(master);
 
             for (long i = Math.round(frameRate / 2); i > 0; i--) {
-                Util.setParticleAlpha(particle, alpha * i / 30);
-                Util.setParticleScale(particle, scale * i / 30);
+                Util.setParticleAlpha(master, alpha * i / 30);
+                Util.setParticleScale(master, scale * i / 30);
 
                 try {
                     Thread.sleep(Math.round(1000 / Main.frameRate));  // ~ 30 FPS
@@ -513,7 +515,7 @@ public final class Main implements ClientModInitializer {
                     throw new RuntimeException(e);
                 }
             }
-            particle.markDead();
+            master.markDead();
         }
     }
 }

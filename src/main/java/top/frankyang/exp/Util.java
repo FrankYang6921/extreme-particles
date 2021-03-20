@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings({"unused", "JavaReflectionMemberAccess"})
-public final class Util {
+@SuppressWarnings({"unused"})
+public abstract class Util {
     private static final Map<Particle, Float> mapping = new HashMap<>();
 
     public static Vector3d getParticleColor(Particle particle) {

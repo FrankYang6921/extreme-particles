@@ -1,10 +1,6 @@
 package top.frankyang.exp.anime;
 
-import javax.naming.NameNotFoundException;
-
-import static java.lang.Float.NaN;
-
-public final class FrameWrapper {
+public class FrameWrapper {
     public final double[] origin;
     public final double[] motion;
     public final int[] color;
@@ -65,7 +61,7 @@ public final class FrameWrapper {
 
         Transform[] t;
         if (this.transforms == null) {
-            t = new Transform[] {Transform.NOTHING};
+            t = new Transform[] {Transform.EMPTY};
         } else {
             t = new Transform[transforms.length];
             for (int i = 0, l = transforms.length; i < l; i++) {

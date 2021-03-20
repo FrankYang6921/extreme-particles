@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public final class ImgRender {
+public abstract class ImgRender {
     private static final int XY = 1;
     private static final int XZ = 2;
     private static final int YZ = 4;

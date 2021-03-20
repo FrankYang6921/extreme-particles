@@ -18,7 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Transform {
-    public static final Transform NOTHING = new Transform();
+    public static final Transform EMPTY = new Transform();
+
     protected final Double[] arguments;
 
     public Transform(Double... arguments) {

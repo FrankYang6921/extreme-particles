@@ -56,19 +56,19 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
     }
 
     public void apply(List<Particle> particles) {
-        Worker thread = this.new Worker(particles, nextGroup);
-        Main.pool.submit(thread);
+        Daemon daemon = new Daemon(particles, nextGroup);
+        Main.pool.submit(daemon);
     }
 
     public void setNextGroup(AnimationGroup nextGroup) {
         this.nextGroup = Objects.requireNonNull(nextGroup);
     }
 
-    private final class Worker implements Runnable {
+    private class Daemon implements Runnable {
         private final List<Particle> particles;
         private final AnimationGroup nextGroup;
 
-        public Worker(List<Particle> particles, AnimationGroup nextGroup) {
+        public Daemon(List<Particle> particles, AnimationGroup nextGroup) {
             this.particles = particles;
             this.nextGroup = nextGroup;
         }
@@ -113,7 +113,7 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                         realFrame.b != Integer.MIN_VALUE;
                 boolean canDoAlpha = !Float.isNaN(realFrame.a);
                 boolean canDoScale = !Float.isNaN(realFrame.s);
-                boolean canDoTransform = !realFrame.transform.equals(Transform.NOTHING);
+                boolean canDoTransform = !realFrame.transform.equals(Transform.EMPTY);
                 double ox = 0, oy = 0, oz = 0;
 
                 if (canDoTransform) {

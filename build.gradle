@@ -11,6 +11,12 @@ version = project.mod_version
 group = project.maven_group
 
 dependencies {
+    // https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
+    implementation group: 'org.apache.xmlgraphics', name: 'batik-transcoder', version: '1.14'
+
+    // https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-codec
+    implementation group: 'org.apache.xmlgraphics', name: 'batik-codec', version: '1.14'
+
     //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
@@ -77,6 +83,9 @@ publishing {
 }
 
 repositories {
+    maven {
+        url 'https://maven.aliyun.com/repository/public/'
+    }
     mavenLocal()
+    mavenCentral()
 }
-

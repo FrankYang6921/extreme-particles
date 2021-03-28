@@ -17,6 +17,7 @@ import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.anime.AnimationMgr;
 import top.frankyang.exp.render.Functional;
 import top.frankyang.exp.render.RenderImg;
+import top.frankyang.exp.render.RenderSvg;
 import top.frankyang.exp.render.RenderTxt;
 
 import javax.script.ScriptEngine;
@@ -48,8 +49,8 @@ public final class Main implements ClientModInitializer {
     public static final ExecutorService pool = Executors.newCachedThreadPool();
     public static final ParticleDaemon particleDaemon = new ParticleDaemon();
     private static final int MAJOR_VERSION = 0;
-    private static final int MINOR_VERSION = 3;
-    private static final int REVISION = 2;
+    private static final int MINOR_VERSION = 4;
+    private static final int REVISION = 0;
     private static final MinecraftClient client = MinecraftClient.getInstance();
     private static final Object lock = 0;
     public static boolean disabled = false;
@@ -70,6 +71,14 @@ public final class Main implements ClientModInitializer {
     private static void sendImgRenderFeedback(String ret, CommandContext<ServerCommandSource> context) {
         if (ret == null) {
             context.getSource().sendFeedback(new LiteralText("按照位图批量构造了粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+        } else {
+            context.getSource().sendError(new LiteralText(ret));
+        }
+    }
+
+    private static void sendSvgRenderFeedback(String ret, CommandContext<ServerCommandSource> context) {
+        if (ret == null) {
+            context.getSource().sendFeedback(new LiteralText("按照矢量图批量构造了粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
         } else {
             context.getSource().sendError(new LiteralText(ret));
         }
@@ -362,6 +371,54 @@ public final class Main implements ClientModInitializer {
                     }).then(CommandManager.argument("animate", string()).executes(context -> {
                         String ret = RenderImg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), getInteger(context, "type"), getFloat(context, "alpha"), getInteger(context, "life"), getFloat(context, "scale"), getString(context, "animate"));
                         sendImgRenderFeedback(ret, context);
+                        return 1;
+                    }))))))))))))))
+            );
+
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("renderSvg").then(CommandManager.argument("particle", particle())
+                    .then(CommandManager.argument("path", string()).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), context.getSource().getPosition(), Vec3d.ZERO, null, false, Vec2f.ZERO, 1, 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("origin", vec3()).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), Vec3d.ZERO, null, false, Vec2f.ZERO, 1, 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("delta", vec3(false)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), null, false, Vec2f.ZERO, 1, 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("color", vec3(false)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), false, Vec2f.ZERO, 1, 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("mono", bool()).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), Vec2f.ZERO, 1, 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("size", new Vec2ArgumentType(false)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), 1, 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("type", integer(0)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), getInteger(context, "type"), 1, -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("alpha", floatArg(0)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), getInteger(context, "type"), getFloat(context, "alpha"), -1, 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("life", integer(0)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), getInteger(context, "type"), getFloat(context, "alpha"), getInteger(context, "life"), 1, null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("scale", floatArg(0)).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), getInteger(context, "type"), getFloat(context, "alpha"), getInteger(context, "life"), getFloat(context, "scale"), null);
+                        sendSvgRenderFeedback(ret, context);
+                        return 1;
+                    }).then(CommandManager.argument("animate", string()).executes(context -> {
+                        String ret = RenderSvg.renderPattern(getParticle(context, "particle"), getString(context, "path"), getVec3(context, "origin"), getVec3(context, "delta"), getVec3(context, "color"), getBool(context, "mono"), getVec2(context, "size"), getInteger(context, "type"), getFloat(context, "alpha"), getInteger(context, "life"), getFloat(context, "scale"), getString(context, "animate"));
+                        sendSvgRenderFeedback(ret, context);
                         return 1;
                     }))))))))))))))
             );

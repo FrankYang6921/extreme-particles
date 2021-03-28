@@ -184,7 +184,6 @@ public class Transform {
             }
 
             String transformName = expr.split("\\s*\\(")[0];
-            //noinspection RedundantCast
             return getTransform(transformName, (Object[]) arguments);
         }
     }

@@ -14,12 +14,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public abstract class ImgRender {
+public final class RenderImg {
     private static final int XY = 1;
     private static final int XZ = 2;
     private static final int YZ = 4;
     private static final int HR = 8;
     private static final int VR = 16;
+
+    private RenderImg() {
+
+    }
 
     public static String renderPattern(ParticleEffect effect,
                                        Image data,

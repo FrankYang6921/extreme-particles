@@ -9,8 +9,12 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({"unused"})
-public abstract class Util {
+public final class ParticleUtils {
     private static final Map<Particle, Float> mapping = new HashMap<>();
+
+    private ParticleUtils() {
+
+    }
 
     public static Vector3d getParticleColor(Particle particle) {
         ReflectiveParticle i = (ReflectiveParticle) particle;
@@ -52,8 +56,7 @@ public abstract class Util {
     }
 
     public static void setParticleScale(Particle particle, float scale) {
-        float currentScale = getParticleScale(particle);
-        float relativeScale = scale / currentScale;
+        float relativeScale = scale / getParticleScale(particle);
         particle.scale(relativeScale);
         mapping.put(particle, scale);
     }
@@ -110,9 +113,9 @@ public abstract class Util {
             minX = Math.min(position.x, minX);
             minY = Math.min(position.y, minY);
             minZ = Math.min(position.z, minZ);
-            maxX = Math.min(position.x, maxX);
-            maxY = Math.min(position.y, maxY);
-            maxZ = Math.min(position.z, maxZ);
+            maxX = Math.max(position.x, maxX);
+            maxY = Math.max(position.y, maxY);
+            maxZ = Math.max(position.z, maxZ);
         }
         return new Vector3d[]{
                 new Vector3d(minX, minY, minZ),

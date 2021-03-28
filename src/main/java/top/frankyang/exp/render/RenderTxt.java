@@ -8,7 +8,7 @@ import top.frankyang.exp.Main;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public abstract class TxtRender {
+public final class RenderTxt {
     private static final RenderingHints renderingHints;
 
     static {
@@ -18,6 +18,9 @@ public abstract class TxtRender {
         renderingHints.put(
                 RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB
         );
+    }
+
+    private RenderTxt() {
     }
 
     public static String renderPattern(ParticleEffect effect,
@@ -79,7 +82,7 @@ public abstract class TxtRender {
         );
         graphics.drawString(data, 0, fontSize);
 
-        return ImgRender.renderPattern(effect, bufferedImage, origin, delta, null, false, size, type, 1, life, scale, id);
+        return RenderImg.renderPattern(effect, bufferedImage, origin, delta, null, false, size, type, 1, life, scale, id);
     }
 
     private static float getRealLength(String text) {

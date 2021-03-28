@@ -6,15 +6,14 @@ import com.google.gson.JsonSyntaxException;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.util.math.Vector3d;
 import top.frankyang.exp.Main;
-import top.frankyang.exp.Util;
+import top.frankyang.exp.ParticleUtils;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static top.frankyang.exp.Util.clearScaleCache;
-import static top.frankyang.exp.Util.getRect3d;
+import static top.frankyang.exp.ParticleUtils.*;
 
 public final class AnimationGroup extends ArrayList<AnimationFrame> {
     private static final Gson gson = new Gson();
@@ -56,7 +55,7 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
     }
 
     public void apply(List<Particle> particles) {
-        Daemon daemon = new Daemon(particles, nextGroup);
+        AnimationDaemon daemon = new AnimationDaemon(particles, nextGroup);
         Main.pool.submit(daemon);
     }
 
@@ -64,11 +63,11 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
         this.nextGroup = Objects.requireNonNull(nextGroup);
     }
 
-    private class Daemon implements Runnable {
+    private class AnimationDaemon implements Runnable {
         private final List<Particle> particles;
         private final AnimationGroup nextGroup;
 
-        public Daemon(List<Particle> particles, AnimationGroup nextGroup) {
+        public AnimationDaemon(List<Particle> particles, AnimationGroup nextGroup) {
             this.particles = particles;
             this.nextGroup = nextGroup;
         }
@@ -95,7 +94,7 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
 
             ArrayList<Vector3d> positions = new ArrayList<>();
             for (Particle particle : particles) {
-                positions.add(Util.getParticlePos(particle));
+                positions.add(ParticleUtils.getParticlePos(particle));
             }
             Vector3d[] rect3d = getRect3d(positions);
             double mx = rect3d[0].x;
@@ -105,21 +104,15 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
             for (AnimationFrame realFrame : realFrames) {
                 int bound = particles.size();
 
-                boolean canDoDelta = !Double.isNaN(realFrame.dx) ||
-                        !Double.isNaN(realFrame.dy) ||
-                        !Double.isNaN(realFrame.dz);
-                boolean canDoColor = realFrame.r != Integer.MIN_VALUE ||
-                        realFrame.g != Integer.MIN_VALUE ||
-                        realFrame.b != Integer.MIN_VALUE;
-                boolean canDoAlpha = !Float.isNaN(realFrame.a);
-                boolean canDoScale = !Float.isNaN(realFrame.s);
+                boolean canDoAlpha = realFrame.a >= 0;
+                boolean canDoScale = realFrame.s >= 0;
                 boolean canDoTransform = !realFrame.transform.equals(Transform.EMPTY);
                 double ox = 0, oy = 0, oz = 0;
 
                 if (canDoTransform) {
-                    ox = realFrame.x;
-                    oy = realFrame.y;
-                    oz = realFrame.z;
+                    ox = !Double.isNaN(realFrame.x) ? realFrame.x : -((rect3d[1].x - mx) / 2);
+                    oy = !Double.isNaN(realFrame.y) ? realFrame.y : -((rect3d[1].y - my) / 2);
+                    oz = !Double.isNaN(realFrame.z) ? realFrame.z : -((rect3d[1].z - mz) / 2);
                 }
 
                 for (int i = 0; i < bound; i++) {
@@ -143,29 +136,31 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                                 then.z + mz - oz
                         );
                     }
-                    if (canDoDelta) {
-                        Util.setParticleDelta(particle,
-                                new Vector3d(
-                                        realFrame.dx,
-                                        realFrame.dy,
-                                        realFrame.dz
-                                )
-                        );
-                    }
-                    if (canDoColor) {
-                        Util.setParticleColor(particle,
-                                new Vector3d(
-                                        realFrame.r / 255f,
-                                        realFrame.g / 255f,
-                                        realFrame.b / 255f
-                                )
-                        );
-                    }
+
+                    Vector3d d = getParticleDelta(particle);
+                    ParticleUtils.setParticleDelta(particle,
+                            new Vector3d(
+                                    Double.isNaN(realFrame.dx) ? d.x : realFrame.dx,
+                                    Double.isNaN(realFrame.dy) ? d.y : realFrame.dy,
+                                    Double.isNaN(realFrame.dz) ? d.z : realFrame.dz
+                            )
+                    );
+
+                    Vector3d c = getParticleColor(particle);
+                    ParticleUtils.setParticleColor(particle,
+                            new Vector3d(
+                                    realFrame.r < 0 ? c.x : realFrame.r / 255f,
+                                    realFrame.g < 0 ? c.y : realFrame.g / 255f,
+                                    realFrame.b < 0 ? c.z : realFrame.b / 255f
+                            )
+                    );
+
                     if (canDoAlpha) {
-                        Util.setParticleAlpha(particle, realFrame.a);
+                        ParticleUtils.setParticleAlpha(particle, realFrame.a);
                     }
+
                     if (canDoScale) {
-                        Util.setParticleScale(particle, realFrame.s);
+                        ParticleUtils.setParticleScale(particle, realFrame.s);
                     }
                 }
 

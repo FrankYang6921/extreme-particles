@@ -22,14 +22,16 @@ public class FrameWrapper {
     public AnimationFrame toFrame() {
         double[] origin;
         if (this.origin == null) {
-            origin = new double[] {1, 0, 0};
+            origin = new double[]{
+                    0, 0, 0
+            };
         } else {
             origin = this.origin.clone();
         }
 
         double[] motion;
         if (this.motion == null) {
-            motion = new double[] {
+            motion = new double[]{
                     Double.NaN,
                     Double.NaN,
                     Double.NaN
@@ -40,10 +42,8 @@ public class FrameWrapper {
 
         int[] color;
         if (this.color == null) {
-            color = new int[] {
-                    Integer.MIN_VALUE,
-                    Integer.MIN_VALUE,
-                    Integer.MIN_VALUE
+            color = new int[]{
+                    -1, -1, -1
             };
         } else {
             color = this.color.clone();
@@ -61,15 +61,16 @@ public class FrameWrapper {
 
         Transform[] t;
         if (this.transforms == null) {
-            t = new Transform[] {Transform.EMPTY};
+            t = new Transform[]{Transform.EMPTY};
         } else {
             t = new Transform[transforms.length];
             for (int i = 0, l = transforms.length; i < l; i++) {
                 try {
                     t[i] = Transform.TransformFactory.parseTransform(transforms[i]);
                 } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                    throw new IllegalArgumentException("不能以指定的变换参数来构造变换对象，" + throwable.getMessage());
+                    throw new IllegalArgumentException(
+                            "不能以指定的变换参数来构造变换对象，" + throwable.getMessage()
+                    );
                 }
             }
         }
@@ -78,14 +79,14 @@ public class FrameWrapper {
         if (this.alpha != null) {
             alpha = this.alpha;
         } else {
-            alpha = Float.NaN;
+            alpha = -1f;
         }
 
         float scale;
         if (this.scale != null) {
             scale = this.scale;
         } else {
-            scale = Float.NaN;
+            scale = -1f;
         }
 
 

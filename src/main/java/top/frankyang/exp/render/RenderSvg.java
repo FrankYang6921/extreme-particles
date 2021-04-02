@@ -8,11 +8,15 @@ import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
+import top.frankyang.exp.internal.Renderer;
+import top.frankyang.exp.internal.RendererContext;
 
 import java.io.*;
 import java.nio.file.Paths;
 
-public final class RenderSvg {
+public final class RenderSvg implements Renderer {
+    public static final RenderSvg INSTANCE = new RenderSvg();
+
     private RenderSvg() {
     }
 
@@ -62,4 +66,16 @@ public final class RenderSvg {
 
         return RenderImg.renderPattern(effect, file.getAbsolutePath(), origin, delta, color, mono, size, type, alpha, life, scale, id);
     }
+
+    @Override
+    public void renderPattern(RendererContext rendererContext) {
+        if (!(rendererContext instanceof RenderImg.ImgRenderContext)) {
+            throw new IllegalArgumentException("Invalid context type.");
+        }
+        RenderImg.ImgRenderContext c = (RenderImg.ImgRenderContext) rendererContext;
+        c.setFeedback(
+                renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+        );
+    }
+
 }

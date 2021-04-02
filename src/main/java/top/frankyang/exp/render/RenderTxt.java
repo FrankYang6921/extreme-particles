@@ -4,11 +4,15 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
+import top.frankyang.exp.internal.Renderer;
+import top.frankyang.exp.internal.RendererContext;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public final class RenderTxt {
+public final class RenderTxt implements Renderer {
+    public static final RenderTxt INSTANCE = new RenderTxt();
+
     private static final RenderingHints renderingHints;
 
     static {
@@ -42,11 +46,11 @@ public final class RenderTxt {
         int fontSize;
         float length = size.x / getRealLength(data);  // The total width of the string
 
-        if (size.x <= 1e-5f && size.y <= 1e-5f) {
+        if (size.x <= 1e-3f && size.y <= 1e-3f) {
             fontSize = 8;
-        } else if (size.y <= 1e-5f) {
+        } else if (size.y <= 1e-3f) {
             fontSize = Math.round(length);  // The total width of the string
-        } else if (size.x <= 1e-5f) {
+        } else if (size.x <= 1e-3f) {
             fontSize = Math.round(size.y);  // The width of a single character
         } else {
             fontSize = Math.round(size.y);  // The width of a single character
@@ -101,5 +105,63 @@ public final class RenderTxt {
     private static int getRealWidth(String text, int fontSize) {
         float width = getRealLength(text);
         return Math.round(width * fontSize);
+    }
+
+    @Override
+    public void renderPattern(RendererContext rendererContext) {
+        if (!(rendererContext instanceof TxtRenderContext)) {
+            throw new IllegalArgumentException("Invalid context type.");
+        }
+        TxtRenderContext c = (TxtRenderContext) rendererContext;
+        c.setFeedback(
+                renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.font, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+        );
+    }
+
+    public static class TxtRenderContext extends RendererContext {
+        public final ParticleEffect effect;
+        public final String data;
+        public final Vec3d origin;
+        public final Vec3d delta;
+        public final Vec3d color;
+        public final String font;
+        public final Vec2f size;
+        public final int type;
+        public final float alpha;
+        public final int life;
+        public final float scale;
+        public final String id;
+
+        public TxtRenderContext(ParticleEffect effect,
+                                String data,
+                                Vec3d origin,
+                                Vec3d delta,
+                                Vec3d color,
+                                String font,
+                                Vec2f size,
+                                int type,
+                                float alpha,
+                                int life,
+                                float scale,
+                                String id) {
+            this.effect = effect;
+            this.data = data;
+            this.origin = origin;
+            this.delta = delta;
+            this.color = color;
+            this.font = font;
+            this.size = size;
+            this.type = type;
+            this.alpha = alpha;
+            this.life = life;
+            this.scale = scale;
+            this.id = id;
+        }
+
+        @Override
+        public String getMessage() {
+            String feedback = getFeedback();
+            return feedback != null ? feedback : "通过文本批量构造了粒子。";
+        }
     }
 }

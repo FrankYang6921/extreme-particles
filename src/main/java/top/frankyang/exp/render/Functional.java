@@ -6,13 +6,17 @@ import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.Property;
 import top.frankyang.exp.anime.AnimationMgr;
+import top.frankyang.exp.internal.Renderer;
+import top.frankyang.exp.internal.RendererContext;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Functional {
+public final class Functional implements Renderer {
+    public static final Functional INSTANCE = new Functional();
+
     private static final ScriptEngine host = Main.getScriptHost();
 
     private Functional() {
@@ -179,9 +183,47 @@ public final class Functional {
                 }
             }
 
-            if (id != null) {
-                AnimationMgr.apply(id, particles);
-            }
+            AnimationMgr.applyIfNotNull(id, particles);
+        }
+    }
+
+    @Override
+    public void renderPattern(RendererContext rendererContext) {
+        if (!(rendererContext instanceof FunctionalContext)) {
+            throw new IllegalArgumentException("Invalid context type.");
+        }
+        FunctionalContext c = (FunctionalContext) rendererContext;
+        c.setFeedback(
+                renderPattern(c.effect, c.data, c.origin,c.time, c.count, c.id)
+        );
+    }
+
+    public static class FunctionalContext extends RendererContext {
+        public final ParticleEffect effect;
+        public final String data;
+        public final Vec3d origin;
+        public final double time;
+        public final int count;
+        public final String id;
+
+        public FunctionalContext(ParticleEffect effect,
+                                  String data,
+                                  Vec3d origin,
+                                  double time,
+                                  int count,
+                                  String id) {
+            this.effect = effect;
+            this.data = data;
+            this.origin = origin;
+            this.time = time;
+            this.count = count;
+            this.id = id;
+        }
+
+        @Override
+        public String getMessage() {
+            String feedback = getFeedback();
+            return feedback != null ? feedback : "通过函数批量构造了粒子。";
         }
     }
 }

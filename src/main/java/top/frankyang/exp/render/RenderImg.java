@@ -6,6 +6,8 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.anime.AnimationMgr;
+import top.frankyang.exp.internal.Renderer;
+import top.frankyang.exp.internal.RendererContext;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -14,7 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public final class RenderImg {
+public final class RenderImg implements Renderer {
+    public static final RenderImg INSTANCE = new RenderImg();
+
     private static final int XY = 1;
     private static final int XZ = 2;
     private static final int YZ = 4;
@@ -22,7 +26,6 @@ public final class RenderImg {
     private static final int VR = 16;
 
     private RenderImg() {
-
     }
 
     public static String renderPattern(ParticleEffect effect,
@@ -86,6 +89,10 @@ public final class RenderImg {
                 int r = (px >> 16) & 0xff;
                 int a = (px >> 24) & 0xff;
 
+                if (a == 0) {  // Hide invisible particles
+                    continue;
+                }
+
                 if (mono) {  // Add monochrome filter
                     int k = (r + g + b) / 3;
                     r = k;
@@ -94,17 +101,13 @@ public final class RenderImg {
                 }
 
                 if (color != null) {  // Add color filter
-                    r *= color.x / 255.;
-                    g *= color.y / 255.;
-                    b *= color.z / 255.;
+                    r *= color.x / 255f;
+                    g *= color.y / 255f;
+                    b *= color.z / 255f;
                 }
 
-                if (1 - alpha > 1e-5f) {  // Add alpha filter
+                if (1 - alpha > 1e-3f) {  // Add alpha filter
                     a *= alpha;
-                }
-
-                if (a == 0) {  // Hide invisible particles
-                    continue;
                 }
 
                 // Build particles
@@ -145,15 +148,12 @@ public final class RenderImg {
                 }
             }
         }
-
-        if (id != null) {
-            AnimationMgr.apply(id, particles);
-        }
+        AnimationMgr.applyIfNotNull(id, particles);
 
         return null;
     }
 
-    public static String renderPattern(ParticleEffect effect,
+    public static String renderPattern(ParticleEffect effect,  // Overloaded for file path input
                                        String data,
                                        Vec3d origin,
                                        Vec3d delta,
@@ -188,5 +188,63 @@ public final class RenderImg {
                 pixels[x][y] = rawPixels[y * w + x];
 
         return pixels;
+    }
+
+    @Override
+    public void renderPattern(RendererContext rendererContext) {
+        if (!(rendererContext instanceof ImgRenderContext)) {
+            throw new IllegalArgumentException("Invalid context type.");
+        }
+        ImgRenderContext c = (ImgRenderContext) rendererContext;
+        c.setFeedback(
+                renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+        );
+    }
+
+    public static class ImgRenderContext extends RendererContext {
+        public final ParticleEffect effect;
+        public final String data;
+        public final Vec3d origin;
+        public final Vec3d delta;
+        public final Vec3d color;
+        public final boolean mono;
+        public final Vec2f size;
+        public final int type;
+        public final float alpha;
+        public final int life;
+        public final float scale;
+        public final String id;
+
+        public ImgRenderContext(ParticleEffect effect,
+                                String data,
+                                Vec3d origin,
+                                Vec3d delta,
+                                Vec3d color,
+                                boolean mono,
+                                Vec2f size,
+                                int type,
+                                float alpha,
+                                int life,
+                                float scale,
+                                String id) {
+            this.effect = effect;
+            this.data = data;
+            this.origin = origin;
+            this.delta = delta;
+            this.color = color;
+            this.mono = mono;
+            this.size = size;
+            this.type = type;
+            this.alpha = alpha;
+            this.life = life;
+            this.scale = scale;
+            this.id = id;
+        }
+
+        @Override
+        public String getMessage() {
+            String feedback = getFeedback();
+            return feedback != null ? feedback : "通过图像批量构造了粒子。";
+        }
     }
 }

@@ -25,9 +25,17 @@ public class AnimationFrame extends Property {
         }
 
         for (int i : color) {
-            if ((i < 0 && i != Integer.MIN_VALUE) || i > 255) {
-                throw new IllegalArgumentException(String.format("颜色的每个值仅能是[0, 255]的整数或-2147483648，而非%s。", Arrays.toString(color)));
+            if ((i < 0 && i != -1) || i > 255) {
+                throw new IllegalArgumentException(String.format("颜色的每个值仅能是[0, 255]的整数或-1，而非%s。", Arrays.toString(color)));
             }
+        }
+
+        if ((alpha < 0 && alpha != -1) || alpha > 1) {
+            throw new IllegalArgumentException(String.format("透明度的值仅能是[0, 1]的数或-1，而非%s。", alpha));
+        }
+
+        if (scale < 0 && scale != -1) {
+            throw new IllegalArgumentException(String.format("缩放 的值仅能是[0, ∞]的数或-1，而非%s。", scale));
         }
 
         if (pace == null || pace < 0 || pace > 100) {

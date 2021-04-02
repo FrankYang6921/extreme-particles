@@ -43,4 +43,8 @@ public class AnimationMgr {
     public static void apply(String id, ArrayList<Particle> particles) {
         Objects.requireNonNull(animations.get(id)).apply(particles);
     }
+
+    public static void applyIfNotNull(String id, ArrayList<Particle> particles) {
+        if (id != null) apply(id, particles);
+    }
 }

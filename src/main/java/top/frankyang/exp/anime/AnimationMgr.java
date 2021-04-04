@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class AnimationMgr {
+public final class AnimationMgr {
+    private AnimationMgr() {
+
+    }
+
     private static final HashMap<String, AnimationGroup> animations = new HashMap<>();
 
     public static String register(String id, String expr, double time, String then) {

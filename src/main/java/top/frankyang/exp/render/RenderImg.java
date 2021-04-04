@@ -19,47 +19,56 @@ import java.util.ArrayList;
 public final class RenderImg implements Renderer {
     public static final RenderImg INSTANCE = new RenderImg();
 
-    private static final int XY = 1;
-    private static final int XZ = 2;
-    private static final int YZ = 4;
-    private static final int HR = 8;
-    private static final int VR = 16;
+    public static final int XY = 1;
+    public static final int XZ = 2;
+    public static final int YZ = 4;
+    public static final int HR = 8;
+    public static final int VR = 16;
 
     private RenderImg() {
     }
 
-    public static String renderPattern(ParticleEffect effect,
-                                       Image data,
-                                       Vec3d origin,
-                                       Vec3d delta,
-                                       Vec3d color,
-                                       boolean mono,
-                                       Vec2f size,
-                                       int type,
-                                       float alpha,
-                                       int life,
-                                       float scale,
-                                       String id) {
+    public static void renderPattern(ParticleEffect effect,
+                                     String data,
+                                     Vec3d origin,
+                                     Vec3d delta,
+                                     Vec3d color,
+                                     boolean mono,
+                                     Vec2f size,
+                                     int type,
+                                     float alpha,
+                                     int life,
+                                     float scale,
+                                     String id) {
         if (Main.disabled) {
-            return null;
+            return;
+        }
+
+        BufferedImage image;
+
+        try {
+            File imageFile = new File(data);
+            image = ImageIO.read(imageFile);
+        } catch (IOException e) {
+            throw new RuntimeException("无法读取指定的图像文件。");
         }
 
         if (type > 31) {
-            return "无法处理像素，因为指定的类型不合法。";
+            throw new RuntimeException("无法处理像素，因为指定的类型不合法。");
         }
 
         if (type < 1) {
-            return "无法处理像素，因为没有指定生成平面。";
+            throw new RuntimeException("无法处理像素，因为没有指定生成平面。");
         }
 
         if (id != null && AnimationMgr.isAbsent(id)) {
-            return "指定的标识符不是有效的动画。";
+            throw new RuntimeException("指定的标识符不是有效的动画。");
         }
 
-        BufferedImage i;
+        BufferedImage i = image;
 
         if (!size.equals(Vec2f.ZERO)) {
-            Image scaled = data.getScaledInstance(
+            Image scaled = image.getScaledInstance(
                     (int) size.x, (int) size.y, BufferedImage.SCALE_SMOOTH
             );
             i = new BufferedImage(
@@ -67,8 +76,6 @@ public final class RenderImg implements Renderer {
             );
             Graphics2D cxt = i.createGraphics();
             cxt.drawImage(scaled, 0, 0, null);
-        } else {
-            i = (BufferedImage) data;
         }
 
         int w = i.getWidth();
@@ -148,40 +155,17 @@ public final class RenderImg implements Renderer {
                 }
             }
         }
+
         AnimationMgr.applyIfNotNull(id, particles);
-
-        return null;
-    }
-
-    public static String renderPattern(ParticleEffect effect,  // Overloaded for file path input
-                                       String data,
-                                       Vec3d origin,
-                                       Vec3d delta,
-                                       Vec3d color,
-                                       boolean mono,
-                                       Vec2f size,
-                                       int type,
-                                       float alpha,
-                                       int life,
-                                       float scale,
-                                       String id) {
-        BufferedImage image;
-
-        try {
-            File imageFile = new File(data);
-            image = ImageIO.read(imageFile);
-        } catch (IOException e) {
-            return "无法读取指定的图像文件。";
-        }
-
-        return renderPattern(effect, image, origin, delta, color, mono, size, type, alpha, life, scale, id);
     }
 
     private static int[][] getPixels(BufferedImage bf, int w, int h) {
         int[] rawPixels = new int[w * h];
         int[][] pixels = new int[w][h];
 
-        bf.getRGB(0, 0, w, h, rawPixels, 0, w);
+        bf.getRGB(
+                0, 0, w, h, rawPixels, 0, w
+        );
 
         for (int y = 0; y < h; y++)
             for (int x = 0; x < w; x++)
@@ -196,8 +180,8 @@ public final class RenderImg implements Renderer {
             throw new IllegalArgumentException("Invalid context type.");
         }
         ImgRenderContext c = (ImgRenderContext) rendererContext;
-        c.setFeedback(
-                renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+        c.catchFeedback(
+                () -> renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
         );
     }
 
@@ -242,9 +226,8 @@ public final class RenderImg implements Renderer {
         }
 
         @Override
-        public String getMessage() {
-            String feedback = getFeedback();
-            return feedback != null ? feedback : "通过图像批量构造了粒子。";
+        public String getSuccessfulFeedback() {
+            return "通过图像批量构造了粒子。";
         }
     }
 }

@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import top.frankyang.exp.Main;
 
 import java.util.*;
 
@@ -22,6 +23,8 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
     @Final
     @Shadow
     private static List<ParticleTextureSheet> PARTICLE_TEXTURE_SHEETS;
+    private final Tessellator tessellator = Tessellator.getInstance();
+    private final BufferBuilder bufferBuilder = tessellator.getBuffer();
     @Shadow
     protected ClientWorld world;
     @Final
@@ -41,9 +44,10 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
     protected abstract void tickParticles(Collection<Particle> collection);
 
     /**
-     * @reason ??
+     * @reason No reason!!
      * @author kworker
      */
+    @Final
     @Overwrite
     public void tick() {
         Map<ParticleTextureSheet, Queue<Particle>> particles = this.particles;
@@ -69,49 +73,54 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
     }
 
     /**
-     * @reason ??
+     * @reason No reason!!
      * @author kworker
      */
+    @Final
     @Overwrite
+    @SuppressWarnings("deprecation")
     public void renderParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate, LightmapTextureManager lightmapTextureManager, Camera camera, float f) {
-        lightmapTextureManager.enable();
-        RenderSystem.enableAlphaTest();
-        RenderSystem.defaultAlphaFunc();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableFog();
+        final boolean safeMode = !Main.isUnsafe;
+
+        if (safeMode) {
+            lightmapTextureManager.enable();
+            RenderSystem.enableAlphaTest();
+            RenderSystem.defaultAlphaFunc();
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableFog();
+        }
         RenderSystem.pushMatrix();
         RenderSystem.multMatrix(matrixStack.peek().getModel());
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.getBuffer();
 
-        Iterator<ParticleTextureSheet> iterator = PARTICLE_TEXTURE_SHEETS.iterator();
-
+        int i = 0;
+        final int size = PARTICLE_TEXTURE_SHEETS.size();
         while (true) {
             ParticleTextureSheet particleTextureSheet;
+            Queue<Particle> queue;
 
-            Iterable<Particle> iterable;
             do {
-                if (!iterator.hasNext()) {
+                if (i == size) {
                     RenderSystem.popMatrix();
-                    RenderSystem.depthMask(true);
-                    RenderSystem.depthFunc(515);
-                    RenderSystem.disableBlend();
-                    RenderSystem.defaultAlphaFunc();
-                    lightmapTextureManager.disable();
-                    RenderSystem.disableFog();
+                    if (safeMode) {
+                        RenderSystem.depthMask(true);
+                        RenderSystem.depthFunc(515);
+                        RenderSystem.disableBlend();
+                        RenderSystem.defaultAlphaFunc();
+                        lightmapTextureManager.disable();
+                        RenderSystem.disableFog();
+                    }
                     return;
                 }
 
-                particleTextureSheet = iterator.next();
-                iterable = this.particles.get(particleTextureSheet);
-            } while (iterable == null);
+                particleTextureSheet = PARTICLE_TEXTURE_SHEETS.get(i++);
+                queue = particles.get(particleTextureSheet);
+            } while (queue == null);
 
             particleTextureSheet.begin(bufferBuilder, textureManager);
 
-            //noinspection CodeBlock2Expr
-            iterable.forEach(particle -> {
+            for (Particle particle : queue) {
                 particle.buildGeometry(bufferBuilder, camera, f);
-            });
+            }
 
             particleTextureSheet.draw(tessellator);
         }

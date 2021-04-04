@@ -14,6 +14,8 @@ import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static top.frankyang.exp.Main.frameSignal;
+
 public final class Functional implements Renderer {
     public static final Functional INSTANCE = new Functional();
 
@@ -81,18 +83,18 @@ public final class Functional implements Renderer {
         return new Property(x, y, z, dx, dy, dz, r, g, b, a, l, s);
     }
 
-    public static String renderPattern(ParticleEffect effect,
-                                       String data,
-                                       Vec3d origin,
-                                       double time,
-                                       int count,
-                                       String id) {
+    public static void renderPattern(ParticleEffect effect,
+                                     String data,
+                                     Vec3d origin,
+                                     double time,
+                                     int count,
+                                     String id) {
         if (Main.disabled) {
-            return null;
+            return;
         }
 
         if (id != null && AnimationMgr.isAbsent(id)) {
-            return "指定的标识符不是有效的动画。";
+            throw new RuntimeException("指定的标识符不是有效的动画。");
         }
 
         double frameTime = time / count;
@@ -101,13 +103,9 @@ public final class Functional implements Renderer {
 
         for (float i = 0; i < time; i += frameTime) {
             Property prop;
-            try {
-                prop = getProperties(
-                        data, origin, i / 1e3, time / 1e3
-                );
-            } catch (RuntimeException e) {
-                return e.getMessage();
-            }
+            prop = getProperties(
+                    data, origin, i / 1e3, time / 1e3
+            );
 
             props.add(prop);
         }
@@ -117,7 +115,17 @@ public final class Functional implements Renderer {
         );
         Main.pool.submit(daemon);
 
-        return null;
+    }
+
+    @Override
+    public void renderPattern(RendererContext rendererContext) {
+        if (!(rendererContext instanceof FunctionalContext)) {
+            throw new IllegalArgumentException("Invalid context type.");
+        }
+        FunctionalContext c = (FunctionalContext) rendererContext;
+        c.catchFeedback(
+                () -> renderPattern(c.effect, c.data, c.origin, c.time, c.count, c.id)
+        );
     }
 
     private static class AnimationDaemon implements Runnable {
@@ -177,7 +185,9 @@ public final class Functional implements Renderer {
                 }
 
                 try {
-                    Thread.sleep(Math.round(1000 / Main.frameRate));  // ~ 30 FPS
+                    synchronized (frameSignal) {
+                        frameSignal.wait();
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -185,17 +195,6 @@ public final class Functional implements Renderer {
 
             AnimationMgr.applyIfNotNull(id, particles);
         }
-    }
-
-    @Override
-    public void renderPattern(RendererContext rendererContext) {
-        if (!(rendererContext instanceof FunctionalContext)) {
-            throw new IllegalArgumentException("Invalid context type.");
-        }
-        FunctionalContext c = (FunctionalContext) rendererContext;
-        c.setFeedback(
-                renderPattern(c.effect, c.data, c.origin,c.time, c.count, c.id)
-        );
     }
 
     public static class FunctionalContext extends RendererContext {
@@ -207,11 +206,11 @@ public final class Functional implements Renderer {
         public final String id;
 
         public FunctionalContext(ParticleEffect effect,
-                                  String data,
-                                  Vec3d origin,
-                                  double time,
-                                  int count,
-                                  String id) {
+                                 String data,
+                                 Vec3d origin,
+                                 double time,
+                                 int count,
+                                 String id) {
             this.effect = effect;
             this.data = data;
             this.origin = origin;
@@ -221,9 +220,8 @@ public final class Functional implements Renderer {
         }
 
         @Override
-        public String getMessage() {
-            String feedback = getFeedback();
-            return feedback != null ? feedback : "通过函数批量构造了粒子。";
+        public String getSuccessfulFeedback() {
+            return "通过函数批量构造了粒子。";
         }
     }
 }

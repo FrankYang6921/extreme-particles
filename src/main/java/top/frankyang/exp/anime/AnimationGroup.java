@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static top.frankyang.exp.Main.frameSignal;
 import static top.frankyang.exp.ParticleUtils.*;
 
 public final class AnimationGroup extends ArrayList<AnimationFrame> {
@@ -165,7 +166,9 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                 }
 
                 try {
-                    Thread.sleep(Math.round(1000 / Main.frameRate));  // ~ 30 FPS
+                    synchronized (frameSignal) {
+                        frameSignal.wait();
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

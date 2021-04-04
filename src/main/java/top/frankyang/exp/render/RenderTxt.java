@@ -7,8 +7,11 @@ import top.frankyang.exp.Main;
 import top.frankyang.exp.internal.Renderer;
 import top.frankyang.exp.internal.RendererContext;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public final class RenderTxt implements Renderer {
     public static final RenderTxt INSTANCE = new RenderTxt();
@@ -27,20 +30,20 @@ public final class RenderTxt implements Renderer {
     private RenderTxt() {
     }
 
-    public static String renderPattern(ParticleEffect effect,
-                                       String data,
-                                       Vec3d origin,
-                                       Vec3d delta,
-                                       Vec3d color,
-                                       String font,
-                                       Vec2f size,
-                                       int type,
-                                       float alpha,
-                                       int life,
-                                       float scale,
-                                       String id) {
+    public static void renderPattern(ParticleEffect effect,
+                                     String data,
+                                     Vec3d origin,
+                                     Vec3d delta,
+                                     Vec3d color,
+                                     String font,
+                                     Vec2f size,
+                                     int type,
+                                     float alpha,
+                                     int life,
+                                     float scale,
+                                     String id) {
         if (Main.disabled) {
-            return null;
+            return;
         }
 
         int fontSize;
@@ -86,7 +89,15 @@ public final class RenderTxt implements Renderer {
         );
         graphics.drawString(data, 0, fontSize);
 
-        return RenderImg.renderPattern(effect, bufferedImage, origin, delta, null, false, size, type, 1, life, scale, id);
+        File file;
+        try {
+            ImageIO.write(bufferedImage, "PNG", file = File.createTempFile("txt2png", ".png"));
+        } catch (IOException e) {  // Throw it!!
+            throw new RuntimeException(e);
+        }
+        file.deleteOnExit();
+
+        RenderImg.renderPattern(effect, file.getAbsolutePath(), origin, delta, null, false, size, type, 1, life, scale, id);
     }
 
     private static float getRealLength(String text) {
@@ -113,8 +124,8 @@ public final class RenderTxt implements Renderer {
             throw new IllegalArgumentException("Invalid context type.");
         }
         TxtRenderContext c = (TxtRenderContext) rendererContext;
-        c.setFeedback(
-                renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.font, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+        c.catchFeedback(
+                () -> renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.font, c.size, c.type, c.alpha, c.life, c.scale, c.id)
         );
     }
 
@@ -159,9 +170,8 @@ public final class RenderTxt implements Renderer {
         }
 
         @Override
-        public String getMessage() {
-            String feedback = getFeedback();
-            return feedback != null ? feedback : "通过文本批量构造了粒子。";
+        public String getSuccessfulFeedback() {
+            return "通过文本批量构造了粒子。";
         }
     }
 }

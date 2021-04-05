@@ -5,7 +5,6 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.Property;
-import top.frankyang.exp.anime.AnimationMgr;
 import top.frankyang.exp.internal.Renderer;
 import top.frankyang.exp.internal.RendererContext;
 
@@ -24,7 +23,7 @@ public final class Functional implements Renderer {
     private Functional() {
     }
 
-    private synchronized static Property getProperties(String expr, Vec3d origin, double thisTick, double finalTick) {
+    private synchronized static Property getProperty(String expr, Vec3d origin, double thisTick, double finalTick) {
         double x, y, z, dx, dy, dz;
         float a, s;
         int r, g, b, l;
@@ -87,14 +86,9 @@ public final class Functional implements Renderer {
                                      String data,
                                      Vec3d origin,
                                      double time,
-                                     int count,
-                                     String id) {
+                                     int count) {
         if (Main.disabled) {
             return;
-        }
-
-        if (id != null && AnimationMgr.isAbsent(id)) {
-            throw new RuntimeException("指定的标识符不是有效的动画。");
         }
 
         double frameTime = time / count;
@@ -102,83 +96,37 @@ public final class Functional implements Renderer {
         List<Property> props = new ArrayList<>();
 
         for (float i = 0; i < time; i += frameTime) {
-            Property prop;
-            prop = getProperties(
+            props.add(getProperty(
                     data, origin, i / 1e3, time / 1e3
-            );
-
-            props.add(prop);
+            ));
         }
 
-        AnimationDaemon daemon = new AnimationDaemon(
-                effect, props, origin, frameTime, count, id
-        );
-        Main.pool.submit(daemon);
-
-    }
-
-    @Override
-    public void renderPattern(RendererContext rendererContext) {
-        if (!(rendererContext instanceof FunctionalContext)) {
-            throw new IllegalArgumentException("Invalid context type.");
-        }
-        FunctionalContext c = (FunctionalContext) rendererContext;
-        c.catchFeedback(
-                () -> renderPattern(c.effect, c.data, c.origin, c.time, c.count, c.id)
-        );
-    }
-
-    private static class AnimationDaemon implements Runnable {
-        private final ParticleEffect effect;
-        private final List<Property> props;
-        private final Vec3d origin;
-        private final double frame;
-        private final int count;
-        private final String id;
-
-        public AnimationDaemon(ParticleEffect effect, List<Property> props, Vec3d origin, double frame, int count, String id) {
-            super();
-            this.effect = effect;
-            this.props = props;
-            this.origin = origin;
-            this.frame = frame;
-            this.count = count;
-            this.id = id;
-        }
-
-        @Override
-        public void run() {
+        Main.pool.submit(() -> {
             long frameCount = Math.round(
-                    frame * count / Main.frameRate
+                    frameTime * count / Main.frameRate
             );
             long partLength = Math.round(
                     (double) count / frameCount
             );
             ArrayList<Particle> particles;
-            particles = new ArrayList<>();
 
             long i = 0;
-            for (Property data : props) {
+            for (Property prop : props) {
                 Vec3d pos = new Vec3d(
-                        data.x + origin.x,
-                        data.y + origin.y,
-                        data.z + origin.z
+                        prop.x + origin.x,
+                        prop.y + origin.y,
+                        prop.z + origin.z
                 );
                 Vec3d delta = new Vec3d(
-                        data.dx, data.dy, data.dz
+                        prop.dx, prop.dy, prop.dz
                 );
                 Vec3d color = new Vec3d(
-                        data.r, data.g, data.b
+                        prop.r, prop.g, prop.b
                 );
-                if (id != null) {
-                    particles.add(Main.constructParticle(
-                            effect, pos, delta, color, data.a, data.l, data.s
-                    ));
-                } else {
-                    Main.constructParticle(
-                            effect, pos, delta, color, data.a, data.l, data.s
-                    );
-                }
+                Main.constructParticle(
+                        effect, pos, delta, color, prop.a, prop.l, prop.s
+                );
+
 
                 if (++i % partLength != 0) {
                     continue;
@@ -192,9 +140,18 @@ public final class Functional implements Renderer {
                     throw new RuntimeException(e);
                 }
             }
+        });
+    }
 
-            AnimationMgr.applyIfNotNull(id, particles);
+    @Override
+    public void renderPattern(RendererContext rendererContext) {
+        if (!(rendererContext instanceof FunctionalContext)) {
+            throw new IllegalArgumentException("Invalid context type.");
         }
+        FunctionalContext c = (FunctionalContext) rendererContext;
+        c.catchFeedback(
+                () -> renderPattern(c.effect, c.data, c.origin, c.time, c.count)
+        );
     }
 
     public static class FunctionalContext extends RendererContext {
@@ -203,20 +160,17 @@ public final class Functional implements Renderer {
         public final Vec3d origin;
         public final double time;
         public final int count;
-        public final String id;
 
         public FunctionalContext(ParticleEffect effect,
                                  String data,
                                  Vec3d origin,
                                  double time,
-                                 int count,
-                                 String id) {
+                                 int count) {
             this.effect = effect;
             this.data = data;
             this.origin = origin;
             this.time = time;
             this.count = count;
-            this.id = id;
         }
 
         @Override

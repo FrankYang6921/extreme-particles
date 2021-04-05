@@ -2,7 +2,7 @@ package top.frankyang.exp;
 
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.util.math.Vector3d;
-import top.frankyang.exp.mixin.ReflectiveParticle;
+import top.frankyang.exp.mixin.ParticleReflector;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,14 +10,14 @@ import java.util.Map;
 
 @SuppressWarnings({"unused"})
 public final class ParticleUtils {
-    private static final Map<Particle, Float> mapping = new HashMap<>();
+    private static final Map<Particle, Float> scaleCache = new HashMap<>();
 
     private ParticleUtils() {
 
     }
 
     public static Vector3d getParticleColor(Particle particle) {
-        ReflectiveParticle i = (ReflectiveParticle) particle;
+        ParticleReflector i = (ParticleReflector) particle;
 
         double x, y, z;
         x = i.getColorRed();
@@ -28,7 +28,7 @@ public final class ParticleUtils {
     }
 
     public static void setParticleColor(Particle particle, Vector3d color) {
-        ReflectiveParticle i = (ReflectiveParticle) particle;
+        ParticleReflector i = (ParticleReflector) particle;
 
         i.setColorRed((float) color.x);
         i.setColorGreen((float) color.y);
@@ -36,37 +36,38 @@ public final class ParticleUtils {
     }
 
     public static float getParticleAlpha(Particle particle) {
-        return ((ReflectiveParticle) particle).getColorAlpha();
+        return ((ParticleReflector) particle).getColorAlpha();
     }
 
     public static void setParticleAlpha(Particle particle, float alpha) {
-        ((ReflectiveParticle) particle).setColorAlpha(alpha);
+        ((ParticleReflector) particle).setColorAlpha(alpha);
     }
 
     public static int getParticleLife(Particle particle) {
-        return ((ReflectiveParticle) particle).getMaxAge();
+        return ((ParticleReflector) particle).getMaxAge();
     }
 
     public static void setParticleLife(Particle particle, int life) {
-        ((ReflectiveParticle) particle).setMaxAge(life);
+        ((ParticleReflector) particle).setMaxAge(life);
     }
 
     public static float getParticleScale(Particle particle) {
-        return mapping.getOrDefault(particle, 1f);
+        return scaleCache.getOrDefault(particle, 1f);
     }
 
     public static void setParticleScale(Particle particle, float scale) {
         float relativeScale = scale / getParticleScale(particle);
         particle.scale(relativeScale);
-        mapping.put(particle, scale);
+        scaleCache.put(particle, scale);
     }
 
-    public static void clearScaleCache() {
-        mapping.entrySet().removeIf(e -> !e.getKey().isAlive());
+    @SuppressWarnings("SuspiciousMethodCalls")
+    public static void deathHook(Object dead) {
+        scaleCache.remove(dead);
     }
 
     public static Vector3d getParticlePos(Particle particle) {
-        ReflectiveParticle i = (ReflectiveParticle) particle;
+        ParticleReflector i = (ParticleReflector) particle;
 
         double x, y, z;
         x = i.getX();
@@ -77,14 +78,14 @@ public final class ParticleUtils {
     }
 
     public static void setParticlePos(Particle particle, Vector3d pos) {
-        ReflectiveParticle i = (ReflectiveParticle) particle;
+        ParticleReflector i = (ParticleReflector) particle;
         i.setX(pos.x);
         i.setY(pos.y);
         i.setZ(pos.z);
     }
 
     public static Vector3d getParticleDelta(Particle particle) {
-        ReflectiveParticle i = (ReflectiveParticle) particle;
+        ParticleReflector i = (ParticleReflector) particle;
 
         double x, y, z;
         x = i.getVelocityX();
@@ -95,7 +96,7 @@ public final class ParticleUtils {
     }
 
     public static void setParticleDelta(Particle particle, Vector3d delta) {
-        ReflectiveParticle i = (ReflectiveParticle) particle;
+        ParticleReflector i = (ParticleReflector) particle;
 
         i.setVelocityX(delta.x);
         i.setVelocityY(delta.y);

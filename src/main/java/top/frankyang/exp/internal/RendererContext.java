@@ -7,7 +7,13 @@ public abstract class RendererContext {
     private ServerCommandSource source;
 
     public void sendFeedback(String s) {
-        source.sendFeedback(Text.of(s != null ? s : getSuccessfulFeedback()), true);
+        if (s != null) {
+            source.sendError(Text.of(s));
+        } else {
+            source.sendFeedback(
+                    Text.of(getSuccessfulFeedback()), true
+            );
+        }
     }
 
     public void catchFeedback(Runnable r) {

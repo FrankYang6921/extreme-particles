@@ -34,7 +34,7 @@ public final class RenderSvg implements Renderer {
                                      float alpha,
                                      int life,
                                      float scale,
-                                     String id) {
+                                     String group) {
         TranscoderInput inputImage = new TranscoderInput(Paths.get(data).toUri().toString());
 
         OutputStream outputStream;
@@ -67,7 +67,18 @@ public final class RenderSvg implements Renderer {
 
         file.deleteOnExit();
 
-        RenderImg.renderPattern(effect, file.getAbsolutePath(), origin, delta, color, mono, size, type, alpha, life, scale, id);
+        RenderImg.renderPattern(effect,
+                file.getAbsolutePath(),
+                origin,
+                delta,
+                color,
+                mono,
+                size,
+                type,
+                alpha,
+                life,
+                scale,
+                group);
     }
 
     @Override

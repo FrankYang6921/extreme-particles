@@ -16,10 +16,10 @@ import java.util.Objects;
 import static top.frankyang.exp.Main.frameSignal;
 import static top.frankyang.exp.ParticleUtils.*;
 
-public final class AnimationGroup extends ArrayList<AnimationFrame> {
+public class AnimationGroup extends ArrayList<AnimationFrame> {
     private static final Gson gson = new Gson();
-    public final double time;
-    AnimationGroup nextGroup;
+    private final double time;
+    private AnimationGroup nextGroup = null;
 
     public AnimationGroup(List<AnimationFrame> frames, double time) {
         this.time = time;
@@ -27,7 +27,7 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    public static AnimationGroup fromExpr(String expr, double time) {
+    public static AnimationGroup of(String expr, double time) {
         Type frameWrapperListType = new TypeToken<List<FrameWrapper>>() {
         }.getType();
 
@@ -52,29 +52,10 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
         }
 
         return new AnimationGroup(frames, time);
-
     }
 
     public void apply(List<Particle> particles) {
-        AnimationDaemon daemon = new AnimationDaemon(particles, nextGroup);
-        Main.pool.submit(daemon);
-    }
-
-    public void setNextGroup(AnimationGroup nextGroup) {
-        this.nextGroup = Objects.requireNonNull(nextGroup);
-    }
-
-    private class AnimationDaemon implements Runnable {
-        private final List<Particle> particles;
-        private final AnimationGroup nextGroup;
-
-        public AnimationDaemon(List<Particle> particles, AnimationGroup nextGroup) {
-            this.particles = particles;
-            this.nextGroup = nextGroup;
-        }
-
-        @Override
-        public void run() {
+        Main.pool.submit(() -> {
             long keyFrameCount = AnimationGroup.this.size();
             long realFrameCount = Math.round(
                     time / 1000 * Main.frameRate
@@ -174,11 +155,11 @@ public final class AnimationGroup extends ArrayList<AnimationFrame> {
                 }
             }
 
-            clearScaleCache();
+            if (nextGroup != null) nextGroup.apply(particles);
+        });
+    }
 
-            if (nextGroup != null) {
-                nextGroup.apply(particles);
-            }
-        }
+    public void setNextGroup(AnimationGroup nextGroup) {
+        this.nextGroup = Objects.requireNonNull(nextGroup);
     }
 }

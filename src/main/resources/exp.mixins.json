@@ -3,11 +3,10 @@
   "minVersion": "0.8",
   "package": "top.frankyang.exp.mixin",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "ReflectiveParticle"
-  ],
   "client": [
-    "BetterParticleMgr"
+    "BetterParticleMgr",
+    "ParticleDeathHook",
+    "ParticleReflector"
   ],
   "injectors": {
     "defaultRequire": 1

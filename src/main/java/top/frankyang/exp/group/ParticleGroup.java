@@ -2,9 +2,7 @@ package top.frankyang.exp.group;
 
 import net.minecraft.client.particle.Particle;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedList;
 
-public class ParticleGroup extends HashMap<String, ArrayList<Particle>> {
-
+public class ParticleGroup extends LinkedList<Particle> {
 }

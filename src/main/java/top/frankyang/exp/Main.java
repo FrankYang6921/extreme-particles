@@ -12,9 +12,11 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.anime.AnimationMgr;
+import top.frankyang.exp.group.ParticleGroupMgr;
 import top.frankyang.exp.internal.RendererManager;
 import top.frankyang.exp.render.Functional;
 import top.frankyang.exp.render.RenderImg;
@@ -51,8 +53,8 @@ public final class Main implements ClientModInitializer {
     public static final ParticleDaemon particleDaemon = new ParticleDaemon();
     public static final Object frameSignal = new Object();
     private static final int MAJOR_VERSION = 0;
-    private static final int MINOR_VERSION = 4;
-    private static final int REVISION = 1;
+    private static final int MINOR_VERSION = 5;
+    private static final int REVISION = 2;
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
     public static boolean disabled = false;
@@ -65,6 +67,7 @@ public final class Main implements ClientModInitializer {
 
     static {
         pool.submit(() -> {
+            long i = 0;
             //noinspection InfiniteLoopStatement
             while (true) {
                 synchronized (frameSignal) {
@@ -81,19 +84,12 @@ public final class Main implements ClientModInitializer {
         });
     }
 
-    private static void sendAnimationFeedback(String ret, CommandContext<ServerCommandSource> context) {
-        if (ret == null) {
-            context.getSource().sendFeedback(new LiteralText("注册了一组动画。"), true);
-        } else {
-            context.getSource().sendError(new LiteralText(ret));
-        }
-    }
-
-    private static void sendWithdrawFeedback(String ret, CommandContext<ServerCommandSource> context) {
-        if (ret == null) {
-            context.getSource().sendFeedback(new LiteralText("注销了一组动画。"), true);
-        } else {
-            context.getSource().sendError(new LiteralText(ret));
+    private static void catchFeedback(Runnable r, String successful, CommandContext<ServerCommandSource> context) {
+        try {
+            r.run();
+            context.getSource().sendFeedback(Text.of(successful), true);
+        } catch (Exception e) {
+            context.getSource().sendError(Text.of(e.getMessage()));
         }
     }
 
@@ -279,42 +275,30 @@ public final class Main implements ClientModInitializer {
                                 getString(context, "func"),
                                 context.getSource().getPosition(),
                                 1e3,
-                                100,
-                                null), context);
+                                100), context);
                         return 1;
                     }).then(CommandManager.argument("origin", vec3()).executes(context -> {
                         RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 getVec3(context, "origin"),
                                 1e3,
-                                100,
-                                null), context);
+                                100), context);
                         return 1;
                     }).then(CommandManager.argument("time", doubleArg(0)).executes(context -> {
                         RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 getVec3(context, "origin"),
                                 getDouble(context, "time"),
-                                100,
-                                null), context);
+                                100), context);
                         return 1;
                     }).then(CommandManager.argument("count", integer(1)).executes(context -> {
                         RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 getVec3(context, "origin"),
                                 getDouble(context, "time"),
-                                getInteger(context, "count"),
-                                null), context);
+                                getInteger(context, "count")), context);
                         return 1;
-                    }).then(CommandManager.argument("animate", string()).executes(context -> {
-                        RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
-                                getString(context, "func"),
-                                getVec3(context, "origin"),
-                                getDouble(context, "time"),
-                                getInteger(context, "count"),
-                                getString(context, "animate")), context);
-                        return 1;
-                    }))))))))
+                    })))))))
             );
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("renderImg").then(CommandManager.argument("particle", particle())
@@ -458,7 +442,7 @@ public final class Main implements ClientModInitializer {
                                 getFloat(context, "scale"),
                                 null), context);
                         return 1;
-                    }).then(CommandManager.argument("animate", string()).executes(context -> {
+                    }).then(CommandManager.argument("group", string()).executes(context -> {
                         RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
@@ -470,7 +454,7 @@ public final class Main implements ClientModInitializer {
                                 getFloat(context, "alpha"),
                                 getInteger(context, "life"),
                                 getFloat(context, "scale"),
-                                getString(context, "animate")), context);
+                                getString(context, "group")), context);
                         return 1;
                     }))))))))))))))
             );
@@ -616,7 +600,7 @@ public final class Main implements ClientModInitializer {
                                 getFloat(context, "scale"),
                                 null), context);
                         return 1;
-                    }).then(CommandManager.argument("animate", string()).executes(context -> {
+                    }).then(CommandManager.argument("group", string()).executes(context -> {
                         RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
@@ -628,7 +612,7 @@ public final class Main implements ClientModInitializer {
                                 getFloat(context, "alpha"),
                                 getInteger(context, "life"),
                                 getFloat(context, "scale"),
-                                getString(context, "animate")), context);
+                                getString(context, "group")), context);
                         return 1;
                     }))))))))))))))
             );
@@ -774,7 +758,7 @@ public final class Main implements ClientModInitializer {
                                 getFloat(context, "scale"),
                                 null), context);
                         return 1;
-                    }).then(CommandManager.argument("animate", string()).executes(context -> {
+                    }).then(CommandManager.argument("group", string()).executes(context -> {
                         RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
@@ -786,76 +770,98 @@ public final class Main implements ClientModInitializer {
                                 getFloat(context, "alpha"),
                                 getInteger(context, "life"),
                                 getFloat(context, "scale"),
-                                getString(context, "animate")), context);
+                                getString(context, "group")), context);
                         return 1;
                     }))))))))))))))
             );
 
-            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("animation")
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("animation").then(CommandManager.literal("withdraw")
                     .then(CommandManager.argument("id", string()).executes(context -> {
-                        String ret = AnimationMgr.withdraw(getString(context, "id"));
-                        sendWithdrawFeedback(ret, context);
+                        try {
+                            AnimationMgr.withdraw(getString(context, "id"));
+                        } catch (Exception e) {
+                            context.getSource().sendError(Text.of(e.getMessage()));
+                            return 1;
+                        }
+                        context.getSource().sendFeedback(Text.of("注销了一组动画。"), true);
                         return 1;
-                    }).then(CommandManager.argument("func", string()).executes(context -> {
-                        String ret = AnimationMgr.register(getString(context, "id"), getString(context, "func"), 1000, null);
-                        sendAnimationFeedback(ret, context);
-                        return 1;
-                    }).then(CommandManager.argument("time", doubleArg(0)).executes(context -> {
-                        String ret = AnimationMgr.register(getString(context, "id"), getString(context, "func"), getDouble(context, "time"), null);
-                        sendAnimationFeedback(ret, context);
-                        return 1;
-                    }).then(CommandManager.argument("then", string()).executes(context -> {
-                        String ret = AnimationMgr.register(getString(context, "id"), getString(context, "func"), getDouble(context, "time"), getString(context, "then"));
-                        sendAnimationFeedback(ret, context);
-                        return 1;
-                    }))))))
+                    }))))
             );
 
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("animation").then(CommandManager.literal("register")
+                    .then(CommandManager.argument("id", string())
+                            .then(CommandManager.argument("func", string()).executes(context -> {
+                                catchFeedback(() -> AnimationMgr.register(getString(context, "id"),
+                                        getString(context, "func"),
+                                        1000,
+                                        null), "注册了一组动画。", context);
+
+                                return 1;
+                            }).then(CommandManager.argument("time", doubleArg(0)).executes(context -> {
+                                catchFeedback(() -> AnimationMgr.register(getString(context, "id"),
+                                        getString(context, "func"),
+                                        getDouble(context, "time"),
+                                        null), "注册了一组动画。", context);
+                                return 1;
+                            }).then(CommandManager.argument("then", string()).executes(context -> {
+                                catchFeedback(() -> AnimationMgr.register(getString(context, "id"),
+                                        getString(context, "func"),
+                                        getDouble(context, "time"),
+                                        getString(context, "then")), "注册了一组动画。", context);
+                                return 1;
+                            })))))))
+            );
+
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("animation").then(CommandManager.literal("apply")
+                    .then(CommandManager.argument("id", string())
+                            .then(CommandManager.argument("group", string()).executes(context -> {
+                                catchFeedback(() ->
+                                        AnimationMgr.apply(
+                                                getString(context, "id"),
+                                                ParticleGroupMgr.get(
+                                                        getString(context, "group")
+                                                )
+                                        ), "执行了一组动画。", context);
+                                return 1;
+                            })))))
+            );
+
+
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("pauseParticleConstruction").then(CommandManager.argument("value", bool()).executes(context -> {
-                        disabled = getBool(context, "value");
-                        context.getSource().sendFeedback(new LiteralText("粒子启用状态已更新。"), false);
-                        return 1;
-                    })))
-            ));
+                disabled = getBool(context, "value");
+                context.getSource().sendFeedback(new LiteralText("粒子启用状态已更新。"), false);
+                return 1;
+            })))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("asyncParticleConstruction").then(CommandManager.argument("value", bool()).executes(context -> {
                 isAsync = getBool(context, "value");
                 context.getSource().sendFeedback(new LiteralText("粒子异步状态已更新。"), false);
-                        return 1;
-                    })))
-            ));
+                return 1;
+            })))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("particleLifeAnimationFix").then(CommandManager.argument("value", bool()).executes(context -> {
                 fixLife = getBool(context, "value");
                 context.getSource().sendFeedback(new LiteralText("寿命修复状态已更新。"), false);
-                        return 1;
-                    })))
-            ));
+                return 1;
+            })))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("globalAnimationFrameRate").then(CommandManager.argument("value", doubleArg(1)).executes(context -> {
-                        frameRate = getDouble(context, "value");
-                        context.getSource().sendFeedback(new LiteralText("目标帧率已更新。"), false);
-                        return 1;
-                    })))
-            ));
-
+                frameRate = getDouble(context, "value");
+                context.getSource().sendFeedback(new LiteralText("目标帧率已更新。"), false);
+                return 1;
+            })))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("utilities").then(CommandManager.literal("showAll").executes(context -> {
-                        showAll();
-                        context.getSource().sendFeedback(new LiteralText("显示了所有粒子。"), false);
-                        return 1;
-                    }))
-            ));
-
+                showAll();
+                context.getSource().sendFeedback(new LiteralText("显示了所有粒子。"), false);
+                return 1;
+            }))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("utilities").then(CommandManager.literal("hideAll").executes(context -> {
-                        hideAll();
-                        context.getSource().sendFeedback(new LiteralText("隐藏了所有粒子。"), false);
-                        return 1;
-                    }))
-            ));
-
+                hideAll();
+                context.getSource().sendFeedback(new LiteralText("隐藏了所有粒子。"), false);
+                return 1;
+            }))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("utilities").then(CommandManager.literal("killAll").executes(context -> {
-                        killAll();
-                        context.getSource().sendFeedback(new LiteralText("杀死了所有粒子。"), false);
-                        return 1;
-                    }))
-            ));
+                killAll();
+                context.getSource().sendFeedback(new LiteralText("杀死了所有粒子。"), false);
+                return 1;
+            }))));
         });
     }
 

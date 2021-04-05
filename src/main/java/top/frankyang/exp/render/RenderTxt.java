@@ -41,7 +41,7 @@ public final class RenderTxt implements Renderer {
                                      float alpha,
                                      int life,
                                      float scale,
-                                     String id) {
+                                     String group) {
         if (Main.disabled) {
             return;
         }
@@ -97,7 +97,18 @@ public final class RenderTxt implements Renderer {
         }
         file.deleteOnExit();
 
-        RenderImg.renderPattern(effect, file.getAbsolutePath(), origin, delta, null, false, size, type, 1, life, scale, id);
+        RenderImg.renderPattern(effect,
+                file.getAbsolutePath(),
+                origin,
+                delta,
+                null,
+                false,
+                size,
+                type,
+                1,
+                life,
+                scale,
+                group);
     }
 
     private static float getRealLength(String text) {

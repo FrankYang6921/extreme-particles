@@ -5,7 +5,7 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
-import top.frankyang.exp.anime.AnimationMgr;
+import top.frankyang.exp.group.ParticleGroupMgr;
 import top.frankyang.exp.internal.Renderer;
 import top.frankyang.exp.internal.RendererContext;
 
@@ -39,7 +39,7 @@ public final class RenderImg implements Renderer {
                                      float alpha,
                                      int life,
                                      float scale,
-                                     String id) {
+                                     String group) {
         if (Main.disabled) {
             return;
         }
@@ -59,10 +59,6 @@ public final class RenderImg implements Renderer {
 
         if (type < 1) {
             throw new RuntimeException("无法处理像素，因为没有指定生成平面。");
-        }
-
-        if (id != null && AnimationMgr.isAbsent(id)) {
-            throw new RuntimeException("指定的标识符不是有效的动画。");
         }
 
         BufferedImage i = image;
@@ -143,7 +139,7 @@ public final class RenderImg implements Renderer {
                 }
 
                 Vec3d position = new Vec3d(origin.x + rx, origin.y + ry, origin.z + rz);
-                if (id != null) {
+                if (group != null) {
                     Particle particle = Main.constructParticle(
                             effect, position, delta, new Vec3d(r, g, b), a / 255f, life, scale
                     );
@@ -156,7 +152,7 @@ public final class RenderImg implements Renderer {
             }
         }
 
-        AnimationMgr.applyIfNotNull(id, particles);
+        ParticleGroupMgr.put(group, particles);
     }
 
     private static int[][] getPixels(BufferedImage bf, int w, int h) {

@@ -67,7 +67,6 @@ public final class Main implements ClientModInitializer {
 
     static {
         pool.submit(() -> {
-            long i = 0;
             //noinspection InfiniteLoopStatement
             while (true) {
                 synchronized (frameSignal) {
@@ -271,28 +270,28 @@ public final class Main implements ClientModInitializer {
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("functional").then(CommandManager.argument("particle", particle())
                     .then(CommandManager.argument("func", string()).executes(context -> {
-                        RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 context.getSource().getPosition(),
                                 1e3,
                                 100), context);
                         return 1;
                     }).then(CommandManager.argument("origin", vec3()).executes(context -> {
-                        RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 getVec3(context, "origin"),
                                 1e3,
                                 100), context);
                         return 1;
                     }).then(CommandManager.argument("time", doubleArg(0)).executes(context -> {
-                        RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 getVec3(context, "origin"),
                                 getDouble(context, "time"),
                                 100), context);
                         return 1;
                     }).then(CommandManager.argument("count", integer(1)).executes(context -> {
-                        RendererManager.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(Functional.INSTANCE, new Functional.FunctionalContext(getParticle(context, "particle"),
                                 getString(context, "func"),
                                 getVec3(context, "origin"),
                                 getDouble(context, "time"),
@@ -303,7 +302,7 @@ public final class Main implements ClientModInitializer {
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("renderImg").then(CommandManager.argument("particle", particle())
                     .then(CommandManager.argument("path", string()).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 context.getSource().getPosition(),
                                 Vec3d.ZERO,
@@ -317,7 +316,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("origin", vec3()).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 Vec3d.ZERO,
@@ -331,7 +330,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("delta", vec3(false)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -345,7 +344,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("color", vec3(false)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -359,7 +358,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("mono", bool()).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -373,7 +372,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("size", new Vec2ArgumentType(false)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -387,7 +386,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("type", integer(0)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -401,7 +400,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("alpha", floatArg(0)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -415,7 +414,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("life", integer(0)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -429,7 +428,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("scale", floatArg(0)).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -443,7 +442,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("group", string()).executes(context -> {
-                        RendererManager.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderImg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -461,7 +460,7 @@ public final class Main implements ClientModInitializer {
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("renderSvg").then(CommandManager.argument("particle", particle())
                     .then(CommandManager.argument("path", string()).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 context.getSource().getPosition(),
                                 Vec3d.ZERO,
@@ -475,7 +474,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("origin", vec3()).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 Vec3d.ZERO,
@@ -489,7 +488,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("delta", vec3(false)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -503,7 +502,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("color", vec3(false)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -517,7 +516,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("mono", bool()).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -531,7 +530,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("size", new Vec2ArgumentType(false)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -545,7 +544,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("type", integer(0)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -559,7 +558,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("alpha", floatArg(0)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -573,7 +572,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("life", integer(0)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -587,7 +586,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("scale", floatArg(0)).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -601,7 +600,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("group", string()).executes(context -> {
-                        RendererManager.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderSvg.INSTANCE, new RenderImg.ImgRenderContext(getParticle(context, "particle"),
                                 getString(context, "path"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -619,7 +618,7 @@ public final class Main implements ClientModInitializer {
 
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("renderTxt").then(CommandManager.argument("particle", particle())
                     .then(CommandManager.argument("text", string()).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 context.getSource().getPosition(),
                                 Vec3d.ZERO,
@@ -633,7 +632,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("origin", vec3()).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 Vec3d.ZERO,
@@ -647,7 +646,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("delta", vec3(false)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -661,7 +660,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("color", vec3(false)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -675,7 +674,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("font", string()).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -689,7 +688,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("size", new Vec2ArgumentType(false)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -703,7 +702,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("type", integer(0)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -717,7 +716,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("alpha", floatArg(0)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -731,7 +730,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("life", integer(0)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -745,7 +744,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("scale", floatArg(0)).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -759,7 +758,7 @@ public final class Main implements ClientModInitializer {
                                 null), context);
                         return 1;
                     }).then(CommandManager.argument("group", string()).executes(context -> {
-                        RendererManager.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
+                        RendererManager.INSTANCE.call(RenderTxt.INSTANCE, new RenderTxt.TxtRenderContext(getParticle(context, "particle"),
                                 getString(context, "text"),
                                 getVec3(context, "origin"),
                                 getVec3(context, "delta"),
@@ -778,7 +777,7 @@ public final class Main implements ClientModInitializer {
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("animation").then(CommandManager.literal("withdraw")
                     .then(CommandManager.argument("id", string()).executes(context -> {
                         try {
-                            AnimationMgr.withdraw(getString(context, "id"));
+                            AnimationMgr.INSTANCE.withdraw(getString(context, "id"));
                         } catch (Exception e) {
                             context.getSource().sendError(Text.of(e.getMessage()));
                             return 1;
@@ -791,20 +790,20 @@ public final class Main implements ClientModInitializer {
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("animation").then(CommandManager.literal("register")
                     .then(CommandManager.argument("id", string())
                             .then(CommandManager.argument("func", string()).executes(context -> {
-                                catchFeedback(() -> AnimationMgr.register(getString(context, "id"),
+                                catchFeedback(() -> AnimationMgr.INSTANCE.register(getString(context, "id"),
                                         getString(context, "func"),
                                         1000,
                                         null), "注册了一组动画。", context);
 
                                 return 1;
                             }).then(CommandManager.argument("time", doubleArg(0)).executes(context -> {
-                                catchFeedback(() -> AnimationMgr.register(getString(context, "id"),
+                                catchFeedback(() -> AnimationMgr.INSTANCE.register(getString(context, "id"),
                                         getString(context, "func"),
                                         getDouble(context, "time"),
                                         null), "注册了一组动画。", context);
                                 return 1;
                             }).then(CommandManager.argument("then", string()).executes(context -> {
-                                catchFeedback(() -> AnimationMgr.register(getString(context, "id"),
+                                catchFeedback(() -> AnimationMgr.INSTANCE.register(getString(context, "id"),
                                         getString(context, "func"),
                                         getDouble(context, "time"),
                                         getString(context, "then")), "注册了一组动画。", context);
@@ -816,9 +815,9 @@ public final class Main implements ClientModInitializer {
                     .then(CommandManager.argument("id", string())
                             .then(CommandManager.argument("group", string()).executes(context -> {
                                 catchFeedback(() ->
-                                        AnimationMgr.apply(
+                                        AnimationMgr.INSTANCE.apply(
                                                 getString(context, "id"),
-                                                ParticleGroupMgr.get(
+                                                ParticleGroupMgr.INSTANCE.get(
                                                         getString(context, "group")
                                                 )
                                         ), "执行了一组动画。", context);

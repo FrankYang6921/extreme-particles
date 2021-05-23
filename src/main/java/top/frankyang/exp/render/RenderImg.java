@@ -28,18 +28,7 @@ public final class RenderImg implements Renderer {
     private RenderImg() {
     }
 
-    public static void renderPattern(ParticleEffect effect,
-                                     String data,
-                                     Vec3d origin,
-                                     Vec3d delta,
-                                     Vec3d color,
-                                     boolean mono,
-                                     Vec2f size,
-                                     int type,
-                                     float alpha,
-                                     int life,
-                                     float scale,
-                                     String group) {
+    static void renderMain(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, boolean mono, Vec2f size, int type, float alpha, int life, float scale, String group) {
         if (Main.disabled) {
             return;
         }
@@ -152,7 +141,7 @@ public final class RenderImg implements Renderer {
             }
         }
 
-        ParticleGroupMgr.put(group, particles);
+        ParticleGroupMgr.INSTANCE.put(group, particles);
     }
 
     private static int[][] getPixels(BufferedImage bf, int w, int h) {
@@ -171,13 +160,13 @@ public final class RenderImg implements Renderer {
     }
 
     @Override
-    public void renderPattern(RendererContext rendererContext) {
+    public void renderContext(RendererContext rendererContext) {
         if (!(rendererContext instanceof ImgRenderContext)) {
             throw new IllegalArgumentException("Invalid context type.");
         }
         ImgRenderContext c = (ImgRenderContext) rendererContext;
         c.catchFeedback(
-                () -> renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
         );
     }
 
@@ -195,18 +184,7 @@ public final class RenderImg implements Renderer {
         public final float scale;
         public final String id;
 
-        public ImgRenderContext(ParticleEffect effect,
-                                String data,
-                                Vec3d origin,
-                                Vec3d delta,
-                                Vec3d color,
-                                boolean mono,
-                                Vec2f size,
-                                int type,
-                                float alpha,
-                                int life,
-                                float scale,
-                                String id) {
+        public ImgRenderContext(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, boolean mono, Vec2f size, int type, float alpha, int life, float scale, String id) {
             this.effect = effect;
             this.data = data;
             this.origin = origin;

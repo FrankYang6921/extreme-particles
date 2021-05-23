@@ -23,18 +23,7 @@ public final class RenderSvg implements Renderer {
     private RenderSvg() {
     }
 
-    public static void renderPattern(ParticleEffect effect,
-                                     String data,
-                                     Vec3d origin,
-                                     Vec3d delta,
-                                     Vec3d color,
-                                     boolean mono,
-                                     Vec2f size,
-                                     int type,
-                                     float alpha,
-                                     int life,
-                                     float scale,
-                                     String group) {
+    private static void renderMain(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, boolean mono, Vec2f size, int type, float alpha, int life, float scale, String group) {
         TranscoderInput inputImage = new TranscoderInput(Paths.get(data).toUri().toString());
 
         OutputStream outputStream;
@@ -67,7 +56,7 @@ public final class RenderSvg implements Renderer {
 
         file.deleteOnExit();
 
-        RenderImg.renderPattern(effect,
+        RenderImg.renderMain(effect,
                 file.getAbsolutePath(),
                 origin,
                 delta,
@@ -82,13 +71,13 @@ public final class RenderSvg implements Renderer {
     }
 
     @Override
-    public void renderPattern(RendererContext rendererContext) {
+    public void renderContext(RendererContext rendererContext) {
         if (!(rendererContext instanceof RenderImg.ImgRenderContext)) {
             throw new IllegalArgumentException("Invalid context type.");
         }
         RenderImg.ImgRenderContext c = (RenderImg.ImgRenderContext) rendererContext;
         c.catchFeedback(
-                () -> renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
         );
     }
 

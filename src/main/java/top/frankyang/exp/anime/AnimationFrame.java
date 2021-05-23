@@ -35,11 +35,11 @@ public class AnimationFrame extends Property {
         }
 
         if (scale < 0 && scale != -1) {
-            throw new IllegalArgumentException(String.format("缩放 的值仅能是[0, ∞]的数或-1，而非%s。", scale));
+            throw new IllegalArgumentException(String.format("缩放的值仅能是[0, ∞]的数或-1，而非%s。", scale));
         }
 
         if (pace == null || pace < 0 || pace > 100) {
-            throw new IllegalArgumentException(String.format("步进仅能是[0, 100]的整数，而非%s。", pace));
+            throw new IllegalArgumentException(String.format("步进仅能是[0, 100]的浮点数，而非%s。", pace));
         }
         this.pace = pace;
         this.transforms = transforms;

@@ -4,16 +4,15 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.util.math.Vector3d;
 import top.frankyang.exp.mixin.ParticleReflector;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 @SuppressWarnings({"unused"})
 public final class ParticleUtils {
-    private static final Map<Particle, Float> scaleCache = new HashMap<>();
+    private static final Map<Particle, Float> scaleCache = new WeakHashMap<>();
 
     private ParticleUtils() {
-
     }
 
     public static Vector3d getParticleColor(Particle particle) {
@@ -59,11 +58,6 @@ public final class ParticleUtils {
         float relativeScale = scale / getParticleScale(particle);
         particle.scale(relativeScale);
         scaleCache.put(particle, scale);
-    }
-
-    @SuppressWarnings("SuspiciousMethodCalls")
-    public static void deathHook(Object dead) {
-        scaleCache.remove(dead);
     }
 
     public static Vector3d getParticlePos(Particle particle) {

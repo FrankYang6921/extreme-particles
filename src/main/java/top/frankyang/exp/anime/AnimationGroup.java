@@ -19,7 +19,7 @@ import static top.frankyang.exp.ParticleUtils.*;
 public class AnimationGroup extends ArrayList<AnimationFrame> {
     private static final Gson gson = new Gson();
     private final double time;
-    private AnimationGroup nextGroup = null;
+    private String nextGroupId = null;
 
     public AnimationGroup(List<AnimationFrame> frames, double time) {
         this.time = time;
@@ -155,11 +155,19 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                 }
             }
 
-            if (nextGroup != null) nextGroup.apply(particles);
+            if (hasNextGroup()) getNextGroup().apply(particles);
         });
     }
 
-    public void setNextGroup(AnimationGroup nextGroup) {
-        this.nextGroup = Objects.requireNonNull(nextGroup);
+    public boolean hasNextGroup() {
+        return !AnimationMgr.INSTANCE.isAbsent(nextGroupId);
+    }
+
+    public AnimationGroup getNextGroup() {
+        return AnimationMgr.INSTANCE.get(nextGroupId);
+    }
+
+    public void setNextGroup(String value) {
+        nextGroupId = value;
     }
 }

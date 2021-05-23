@@ -7,9 +7,4 @@ public class ParticleGroupMap extends HashMap<String, ParticleGroup> {
         super();
         put(null, new ParticleGroup());
     }
-
-    @SuppressWarnings("SuspiciousMethodCalls")
-    public void deathHook(Object dead) {
-        forEach((s, g) -> g.remove(dead));
-    }
 }

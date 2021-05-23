@@ -82,11 +82,7 @@ public final class Functional implements Renderer {
         return new Property(x, y, z, dx, dy, dz, r, g, b, a, l, s);
     }
 
-    public static void renderPattern(ParticleEffect effect,
-                                     String data,
-                                     Vec3d origin,
-                                     double time,
-                                     int count) {
+    public static void renderMain(ParticleEffect effect, String data, Vec3d origin, double time, int count) {
         if (Main.disabled) {
             return;
         }
@@ -144,13 +140,13 @@ public final class Functional implements Renderer {
     }
 
     @Override
-    public void renderPattern(RendererContext rendererContext) {
+    public void renderContext(RendererContext rendererContext) {
         if (!(rendererContext instanceof FunctionalContext)) {
             throw new IllegalArgumentException("Invalid context type.");
         }
         FunctionalContext c = (FunctionalContext) rendererContext;
         c.catchFeedback(
-                () -> renderPattern(c.effect, c.data, c.origin, c.time, c.count)
+                () -> renderMain(c.effect, c.data, c.origin, c.time, c.count)
         );
     }
 
@@ -161,11 +157,7 @@ public final class Functional implements Renderer {
         public final double time;
         public final int count;
 
-        public FunctionalContext(ParticleEffect effect,
-                                 String data,
-                                 Vec3d origin,
-                                 double time,
-                                 int count) {
+        public FunctionalContext(ParticleEffect effect, String data, Vec3d origin, double time, int count) {
             this.effect = effect;
             this.data = data;
             this.origin = origin;

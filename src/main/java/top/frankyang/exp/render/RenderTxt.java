@@ -30,18 +30,7 @@ public final class RenderTxt implements Renderer {
     private RenderTxt() {
     }
 
-    public static void renderPattern(ParticleEffect effect,
-                                     String data,
-                                     Vec3d origin,
-                                     Vec3d delta,
-                                     Vec3d color,
-                                     String font,
-                                     Vec2f size,
-                                     int type,
-                                     float alpha,
-                                     int life,
-                                     float scale,
-                                     String group) {
+    private static void renderMain(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, String font, Vec2f size, int type, float alpha, int life, float scale, String group) {
         if (Main.disabled) {
             return;
         }
@@ -97,7 +86,7 @@ public final class RenderTxt implements Renderer {
         }
         file.deleteOnExit();
 
-        RenderImg.renderPattern(effect,
+        RenderImg.renderMain(effect,
                 file.getAbsolutePath(),
                 origin,
                 delta,
@@ -130,13 +119,13 @@ public final class RenderTxt implements Renderer {
     }
 
     @Override
-    public void renderPattern(RendererContext rendererContext) {
+    public void renderContext(RendererContext rendererContext) {
         if (!(rendererContext instanceof TxtRenderContext)) {
             throw new IllegalArgumentException("Invalid context type.");
         }
         TxtRenderContext c = (TxtRenderContext) rendererContext;
         c.catchFeedback(
-                () -> renderPattern(c.effect, c.data, c.origin, c.delta, c.color, c.font, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.font, c.size, c.type, c.alpha, c.life, c.scale, c.id)
         );
     }
 
@@ -154,18 +143,7 @@ public final class RenderTxt implements Renderer {
         public final float scale;
         public final String id;
 
-        public TxtRenderContext(ParticleEffect effect,
-                                String data,
-                                Vec3d origin,
-                                Vec3d delta,
-                                Vec3d color,
-                                String font,
-                                Vec2f size,
-                                int type,
-                                float alpha,
-                                int life,
-                                float scale,
-                                String id) {
+        public TxtRenderContext(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, String font, Vec2f size, int type, float alpha, int life, float scale, String id) {
             this.effect = effect;
             this.data = data;
             this.origin = origin;

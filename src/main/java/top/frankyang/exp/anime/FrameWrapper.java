@@ -1,95 +1,61 @@
 package top.frankyang.exp.anime;
 
+import java.util.Arrays;
+
 public class FrameWrapper {
     public final double[] origin;
-    public final double[] motion;
-    public final int[] color;
-    public final Float alpha;
+    public final double[] color;
+    public final String blendMode;
     public final Float scale;
-    public final Double pace;
+    public final Double progress;
     public final String[] transforms;
 
-    public FrameWrapper(double[] origin, double[] motion, int[] color, Float alpha, Float scale, Double pace, String[] transforms) {
+    private FrameWrapper(double[] origin, double[] color, Float scale, String blendMode, Double progress, String[] transforms) {
         this.origin = origin;
-        this.motion = motion;
         this.color = color;
-        this.alpha = alpha;
         this.scale = scale;
-        this.pace = pace;
+        this.blendMode = blendMode;
+        this.progress = progress;
         this.transforms = transforms;
     }
 
     public AnimationFrame toFrame() {
-        double[] origin;
-        if (this.origin == null) {
-            origin = new double[]{
-                    0, 0, 0
-            };
-        } else {
-            origin = this.origin.clone();
-        }
+        double[] origin = this.origin == null ? new double[]{
+                0, 0, 0
+        } : this.origin.clone();
 
-        double[] motion;
-        if (this.motion == null) {
-            motion = new double[]{
-                    Double.NaN,
-                    Double.NaN,
-                    Double.NaN
-            };
-        } else {
-            motion = this.motion.clone();
-        }
-
-        int[] color;
-        if (this.color == null) {
-            color = new int[]{
-                    -1, -1, -1
-            };
-        } else {
-            color = this.color.clone();
-        }
+        double[] color = this.color == null ? new double[]{
+                -1, -1, -1, -1
+        } : this.color.clone();
 
         if (origin.length != 3) {
             throw new IllegalArgumentException("原点的值仅能是包含三个浮点值的数组。");
         }
-        if (motion.length != 3) {
-            throw new IllegalArgumentException("动量的值仅能是包含三个浮点值的数组。");
-        }
         if (color.length != 3) {
-            throw new IllegalArgumentException("颜色的值仅能是包含三个整数值的数组。");
+            throw new IllegalArgumentException("颜色的值仅能是包含四个浮点值的数组。");
         }
 
-        Transform[] t;
+        Transform[] transforms;
         if (this.transforms == null) {
-            t = new Transform[]{Transform.EMPTY};
+            transforms = new Transform[]{Transform.EMPTY};
         } else {
-            t = new Transform[transforms.length];
-            for (int i = 0, l = transforms.length; i < l; i++) {
+            transforms = (Transform[]) Arrays.stream(this.transforms).map(t -> {
                 try {
-                    t[i] = Transform.TransformFactory.parseTransform(transforms[i]);
+                    return Transform
+                            .TransformFactory
+                            .parseTransform(t);
                 } catch (Throwable throwable) {
                     throw new IllegalArgumentException(
-                            "不能以指定的变换参数来构造变换对象，" + throwable.getMessage()
+                            "不能以指定的变换参数来构造变换对象：" + throwable.getMessage()
                     );
                 }
-            }
+            }).toArray();
         }
 
-        float alpha;
-        if (this.alpha != null) {
-            alpha = this.alpha;
-        } else {
-            alpha = -1f;
-        }
+        float scale = this.scale != null ? this.scale : -1f;
 
-        float scale;
-        if (this.scale != null) {
-            scale = this.scale;
-        } else {
-            scale = -1f;
-        }
+        BlendMode blendMode = BlendMode.valueOf(this.blendMode);
 
-
-        return new AnimationFrame(origin, motion, color, alpha, scale, pace, t);
+        return new AnimationFrame(origin, color, scale, blendMode, progress, transforms);
     }
 }

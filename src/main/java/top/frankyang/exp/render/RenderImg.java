@@ -166,7 +166,7 @@ public final class RenderImg implements Renderer {
         }
         ImgRenderContext c = (ImgRenderContext) rendererContext;
         c.catchFeedback(
-                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.group)
         );
     }
 
@@ -182,9 +182,9 @@ public final class RenderImg implements Renderer {
         public final float alpha;
         public final int life;
         public final float scale;
-        public final String id;
+        public final String group;
 
-        public ImgRenderContext(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, boolean mono, Vec2f size, int type, float alpha, int life, float scale, String id) {
+        public ImgRenderContext(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, boolean mono, Vec2f size, int type, float alpha, int life, float scale, String group) {
             this.effect = effect;
             this.data = data;
             this.origin = origin;
@@ -196,7 +196,7 @@ public final class RenderImg implements Renderer {
             this.alpha = alpha;
             this.life = life;
             this.scale = scale;
-            this.id = id;
+            this.group = group;
         }
 
         @Override

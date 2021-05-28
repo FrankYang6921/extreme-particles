@@ -77,7 +77,7 @@ public final class RenderSvg implements Renderer {
         }
         RenderImg.ImgRenderContext c = (RenderImg.ImgRenderContext) rendererContext;
         c.catchFeedback(
-                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.id)
+                () -> renderMain(c.effect, c.data, c.origin, c.delta, c.color, c.mono, c.size, c.type, c.alpha, c.life, c.scale, c.group)
         );
     }
 

@@ -38,7 +38,7 @@ public final class AnimationMgr {
         return !animations.containsKey(id);
     }
 
-    public void apply(String id, List<Particle> particles) {
-        Objects.requireNonNull(animations.get(id), "该标识符未被定义。").apply(particles);
+    public void apply(String id, List<Particle> particles, boolean withdrawAfter, boolean killAllAfter) {
+        Objects.requireNonNull(animations.get(id), "该标识符未被定义。").apply(particles, withdrawAfter, killAllAfter);
     }
 }

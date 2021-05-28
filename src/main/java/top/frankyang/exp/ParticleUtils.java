@@ -117,4 +117,23 @@ public final class ParticleUtils {
                 new Vector3d(maxX, maxY, maxZ)
         };
     }
+
+    public static Property getParticleProperty(Particle particle) {
+        Vector3d pos = getParticlePos(particle);
+        Vector3d delta = getParticleDelta(particle);
+        Vector3d color = getParticleColor(particle);
+        return new Property(pos.x,
+                pos.y,
+                pos.z,
+                delta.x,
+                delta.y,
+                delta.z,
+                (int) color.x * 255,
+                (int) color.y * 255,
+                (int) color.z * 255,
+                getParticleAlpha(particle),
+                getParticleLife(particle),
+                getParticleScale(particle)
+        );
+    }
 }

@@ -168,7 +168,7 @@ public class Transform {
                         .replaceAll("[()]+", "");
                 argumentStrings = argumentString.split("[\\s,]+");
             } else {
-                throw new IllegalArgumentException("在变换表达式中找不到实际参数数组。您是否错误地使用了全角括号？");
+                throw new IllegalArgumentException("在变换表达式中找不到变换实参数组。您是否错误地使用了全角括号？");
             }
 
             Double[] arguments = new Double[argumentStrings.length];

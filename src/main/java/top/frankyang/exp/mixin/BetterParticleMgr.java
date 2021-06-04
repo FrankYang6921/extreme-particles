@@ -80,7 +80,7 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
     @Overwrite
     @SuppressWarnings("deprecation")
     public void renderParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate, LightmapTextureManager lightmapTextureManager, Camera camera, float f) {
-        final boolean safeMode = !Main.isUnsafe;
+        final boolean safeMode = !Main.doUnsafeRendererOptimization;
 
         if (safeMode) {
             lightmapTextureManager.enable();
@@ -93,7 +93,8 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
         RenderSystem.multMatrix(matrixStack.peek().getModel());
 
         int i = 0;
-        final int size = PARTICLE_TEXTURE_SHEETS.size();
+        int size = PARTICLE_TEXTURE_SHEETS.size();
+
         while (true) {
             ParticleTextureSheet particleTextureSheet;
             Queue<Particle> queue;

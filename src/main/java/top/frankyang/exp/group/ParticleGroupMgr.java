@@ -14,20 +14,27 @@ public final class ParticleGroupMgr {
     private ParticleGroupMgr() {
     }
 
-    public void put(String groupName, Particle particle) {
-        groupMap.computeIfAbsent(
+    public void putParticles(String groupName, Collection<Particle> particles) {
+        List<Particle> group = groupMap.computeIfAbsent(
                 groupName, s -> new ParticleGroup()
-        ).add(particle);
+        );
+        group.addAll(particles);
     }
 
-    public void put(String groupName, Collection<Particle> particle) {
-        groupMap.computeIfAbsent(
-                groupName, s -> new ParticleGroup()
-        ).addAll(particle);
+    public List<Particle> getOrEmpty(String groupName) {
+        if (!groupMap.containsKey(groupName))
+            return Collections.emptyList();
+        return groupMap.get(groupName);
     }
 
-    public List<Particle> get(String groupName) {
-        List<Particle> groupList = groupMap.get(groupName);
-        return groupList != null ? groupList : Collections.emptyList();  // If not found, returns an empty list instead.
+    public List<Particle> getOrThrow(String groupName) {
+        if (!groupMap.containsKey(groupName))
+            throw new IllegalArgumentException();
+        return groupMap.get(groupName);
+    }
+
+    public List<Particle> getOrCreate(String groupName) {
+        groupMap.computeIfAbsent(groupName, s -> new ParticleGroup());
+        return groupMap.get(groupName);
     }
 }

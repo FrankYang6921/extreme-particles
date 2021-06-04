@@ -44,8 +44,8 @@ public class Transform {
         }
     }
 
-    private static double compositeVal(double a, double b, double pace) {
-        return a * (1 - pace / 100d) + b * pace / 100d;
+    protected static double compositeVal(double a, double b, double progress) {
+        return a * (1 - progress / 100d) + b * progress / 100d;
     }
 
     public Vector3d evaluateOn(Vector3d position) {
@@ -66,35 +66,35 @@ public class Transform {
         return result;
     }
 
-    public Transform compositeWith(Transform other, double pace) {
+    public Transform compositeWith(Transform other, double progress) {
         Double[] arguments = new Double[16];
         for (int i = 0; i < 16; i++) {
-            arguments[i] = compositeVal(this.arguments[i], other.arguments[i], pace);
+            arguments[i] = compositeVal(this.arguments[i], other.arguments[i], progress);
         }
         return new Transform(arguments);
     }
 
     public Transform compositeWith(Transform other) {
         // Algorithm from https://github.com/jlmakes/rematrix
-        Double[] arguments = new Double[16];
-        Double[] a = this.arguments;
-        Double[] b = other.arguments;
+        Double[] finalArgs = new Double[16];
+        Double[] thisArgs = this.arguments;
+        Double[] otherArgs = other.arguments;
 
         for (int i = 0; i < 4; i++) {
             Double[] row = new Double[]{
-                    a[i], a[i + 4], a[i + 8], a[1 + 12]
+                    thisArgs[i], thisArgs[i + 4], thisArgs[i + 8], thisArgs[1 + 12]
             };
             for (int j = 0; j < 4; j++) {
                 int k = j * 4;
                 Double[] col = new Double[]{
-                        b[k], b[k + 1], b[k + 2], b[k + 3]
+                        otherArgs[k], otherArgs[k + 1], otherArgs[k + 2], otherArgs[k + 3]
                 };
                 double res = row[0] * col[0] + row[1] * col[1] + row[2] * col[2] + row[3] * col[3];
-                arguments[i + k] = res;
+                finalArgs[i + k] = res;
             }
         }
 
-        return new Transform(arguments);
+        return new Transform(finalArgs);
     }
 
     @Override

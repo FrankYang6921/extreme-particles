@@ -5,6 +5,7 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.Property;
+import top.frankyang.exp.ThreadUtils;
 import top.frankyang.exp.internal.Renderer;
 import top.frankyang.exp.internal.RendererContext;
 
@@ -83,7 +84,7 @@ public final class Functional implements Renderer {
     }
 
     public static void renderMain(ParticleEffect effect, String data, Vec3d origin, double time, int count) {
-        if (Main.disabled) {
+        if (Main.isParticleConstructionPaused) {
             return;
         }
 
@@ -97,9 +98,9 @@ public final class Functional implements Renderer {
             ));
         }
 
-        Main.pool.submit(() -> {
+        ThreadUtils.parallelPool.submit(() -> {
             long frameCount = Math.round(
-                    frameTime * count / Main.frameRate
+                    frameTime * count / Main.globalAnimationTargetFrameRate
             );
             long partLength = Math.round(
                     (double) count / frameCount

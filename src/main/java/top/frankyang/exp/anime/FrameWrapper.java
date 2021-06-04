@@ -1,12 +1,10 @@
 package top.frankyang.exp.anime;
 
-import java.util.Arrays;
-
 public class FrameWrapper {
     public final double[] origin;
     public final double[] color;
-    public final String blendMode;
     public final Float scale;
+    public final String blendMode;
     public final Double progress;
     public final String[] transforms;
 
@@ -31,7 +29,7 @@ public class FrameWrapper {
         if (origin.length != 3) {
             throw new IllegalArgumentException("原点的值仅能是包含三个浮点值的数组。");
         }
-        if (color.length != 3) {
+        if (color.length != 4) {
             throw new IllegalArgumentException("颜色的值仅能是包含四个浮点值的数组。");
         }
 
@@ -39,22 +37,22 @@ public class FrameWrapper {
         if (this.transforms == null) {
             transforms = new Transform[]{Transform.EMPTY};
         } else {
-            transforms = (Transform[]) Arrays.stream(this.transforms).map(t -> {
+            transforms = new Transform[this.transforms.length];
+            for (int i = 0; i < transforms.length; i++) {
                 try {
-                    return Transform
+                    transforms[i] = Transform
                             .TransformFactory
-                            .parseTransform(t);
+                            .parseTransform(this.transforms[i]);
                 } catch (Throwable throwable) {
                     throw new IllegalArgumentException(
                             "不能以指定的变换参数来构造变换对象：" + throwable.getMessage()
                     );
                 }
-            }).toArray();
+            }
         }
 
         float scale = this.scale != null ? this.scale : -1f;
-
-        BlendMode blendMode = BlendMode.valueOf(this.blendMode);
+        BlendMode blendMode = this.blendMode != null ? BlendMode.valueOf(this.blendMode) : BlendMode.NORMAL;
 
         return new AnimationFrame(origin, color, scale, blendMode, progress, transforms);
     }

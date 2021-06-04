@@ -28,8 +28,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
@@ -49,7 +47,6 @@ import static net.minecraft.command.argument.Vec3ArgumentType.vec3;
 
 
 public final class Main implements ClientModInitializer {
-    public static final ExecutorService pool = Executors.newCachedThreadPool();
     public static final ParticleDaemon particleDaemon = new ParticleDaemon();
     public static final Object frameSignal = new Object();
     private static final int MAJOR_VERSION = 0;
@@ -57,16 +54,16 @@ public final class Main implements ClientModInitializer {
     private static final int REVISION = 2;
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
-    public static boolean disabled = false;
-    public static boolean isAsync = false;
-    public static boolean fixLife = true;
-    public static boolean isUnsafe = true;
-    public static double frameRate = 30.3d;
+    public static boolean isParticleConstructionPaused = false;
+    public static boolean doAsyncParticleConstruction = true;
+    public static boolean doParticleLifeAnimationFix = true;
+    public static boolean doUnsafeRendererOptimization = true;
+    public static double globalAnimationTargetFrameRate = 30.3d;
 
     private static ScriptEngine host;
 
     static {
-        pool.submit(() -> {
+        ThreadUtils.parallelPool.submit(() -> {
             //noinspection InfiniteLoopStatement
             while (true) {
                 synchronized (frameSignal) {
@@ -75,7 +72,7 @@ public final class Main implements ClientModInitializer {
 
                 try {
                     //noinspection BusyWait
-                    Thread.sleep(Math.round(1000 / Main.frameRate));  // ~ 30 FPS
+                    Thread.sleep(Math.round(1000 / Main.globalAnimationTargetFrameRate));  // ~ 30 FPS
                 } catch (InterruptedException e) {
                     throw new AssertionError(e);
                 }
@@ -84,12 +81,15 @@ public final class Main implements ClientModInitializer {
     }
 
     private static void catchFeedback(Runnable r, String successful, CommandContext<ServerCommandSource> context) {
-        try {
-            r.run();
-            context.getSource().sendFeedback(Text.of(successful), true);
-        } catch (Exception e) {
-            context.getSource().sendError(Text.of(e.getMessage()));
-        }
+        ThreadUtils.serialPool.submit(() -> {
+            try {
+                r.run();
+                context.getSource().sendFeedback(Text.of(successful), true);
+            } catch (Exception e) {
+                e.printStackTrace();
+                context.getSource().sendError(Text.of(e.getMessage()));
+            }
+        });
     }
 
     private synchronized static Particle addParticle(
@@ -104,7 +104,7 @@ public final class Main implements ClientModInitializer {
     }
 
     public static Particle constructParticle(ParticleEffect effect, Vec3d position, Vec3d delta, Vec3d color, float alpha, int life, float scale) {
-        if (disabled) {
+        if (isParticleConstructionPaused) {
             return null;
         }
 
@@ -133,7 +133,7 @@ public final class Main implements ClientModInitializer {
         }
         if (life >= 0) {
             ParticleUtils.setParticleLife(particle, life);
-            if (fixLife) {
+            if (doParticleLifeAnimationFix) {
                 particleDaemon.offer(particle);
             }
         }
@@ -239,31 +239,31 @@ public final class Main implements ClientModInitializer {
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("primitive")
                     .then(CommandManager.argument("particle", particle()).executes(context -> {
                         constructParticle(getParticle(context, "particle"), context.getSource().getPosition(), Vec3d.ZERO, null, -1, -1, -1);
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     }).then(CommandManager.argument("position", vec3()).executes(context -> {
                         constructParticle(getParticle(context, "particle"), getVec3(context, "position"), Vec3d.ZERO, null, -1, -1, -1);
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     }).then(CommandManager.argument("delta", vec3(false)).executes(context -> {
                         constructParticle(getParticle(context, "particle"), getVec3(context, "position"), getVec3(context, "delta"), null, -1, -1, -1);
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     }).then(CommandManager.argument("color", vec3(false)).executes(context -> {
                         constructParticle(getParticle(context, "particle"), getVec3(context, "position"), getVec3(context, "delta"), getVec3(context, "color"), -1, -1, -1);
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     }).then(CommandManager.argument("alpha", floatArg(0)).executes(context -> {
                         constructParticle(getParticle(context, "particle"), getVec3(context, "position"), getVec3(context, "delta"), getVec3(context, "color"), getFloat(context, "alpha"), -1, -1);
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     }).then(CommandManager.argument("life", integer(0)).executes(context -> {
                         constructParticle(getParticle(context, "particle"), getVec3(context, "position"), getVec3(context, "delta"), getVec3(context, "color"), getFloat(context, "alpha"), getInteger(context, "life"), -1);
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     }).then(CommandManager.argument("scale", floatArg(0)).executes(context -> {
                         constructParticle(getParticle(context, "particle"), getVec3(context, "position"), getVec3(context, "delta"), getVec3(context, "color"), getFloat(context, "alpha"), getInteger(context, "life"), getFloat(context, "scale"));
-                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (disabled ? "，但是并未被显示。" : "。")), false);
+                        context.getSource().sendFeedback(new LiteralText("构造了1个粒子" + (isParticleConstructionPaused ? "，但是并未被显示。" : "。")), false);
                         return 1;
                     })))))))))
             );
@@ -438,54 +438,59 @@ public final class Main implements ClientModInitializer {
                                 catchFeedback(() ->
                                         AnimationMgr.INSTANCE.apply(
                                                 getString(context, "id"),
-                                                ParticleGroupMgr.INSTANCE.get(
+                                                ParticleGroupMgr.INSTANCE.getOrCreate(
                                                         getString(context, "group")
                                                 ),
                                                 false, false
                                         ), "执行了一组动画。", context);
                                 return 1;
-                            }).then(CommandManager.argument("withdrawAfter", bool()).executes(context -> {
+                            }).then(CommandManager.argument("withdrawNow", bool()).executes(context -> {
                                 catchFeedback(() ->
                                         AnimationMgr.INSTANCE.apply(
                                                 getString(context, "id"),
-                                                ParticleGroupMgr.INSTANCE.get(
+                                                ParticleGroupMgr.INSTANCE.getOrCreate(
                                                         getString(context, "group")
                                                 ),
-                                                getBool(context, "withdrawAfter"), false
+                                                getBool(context, "withdrawNow"), false
                                         ), "执行了一组动画。", context);
                                 return 1;
                             }).then(CommandManager.argument("killAllAfter", bool()).executes(context -> {
                                 catchFeedback(() ->
                                         AnimationMgr.INSTANCE.apply(
                                                 getString(context, "id"),
-                                                ParticleGroupMgr.INSTANCE.get(
+                                                ParticleGroupMgr.INSTANCE.getOrCreate(
                                                         getString(context, "group")
                                                 ),
-                                                getBool(context, "withdrawAfter"),
-                                                getBool(context, "withdrawAfter")
+                                                getBool(context, "withdrawNow"),
+                                                getBool(context, "killAllAfter")
                                         ), "执行了一组动画。", context);
                                 return 1;
                             })))))))
             );
 
 
-            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("pauseParticleConstruction").then(CommandManager.argument("value", bool()).executes(context -> {
-                disabled = getBool(context, "value");
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("isParticleConstructionPaused").then(CommandManager.argument("value", bool()).executes(context -> {
+                isParticleConstructionPaused = getBool(context, "value");
                 context.getSource().sendFeedback(new LiteralText("粒子启用状态已更新。"), false);
                 return 1;
             })))));
-            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("asyncParticleConstruction").then(CommandManager.argument("value", bool()).executes(context -> {
-                isAsync = getBool(context, "value");
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("doAsyncParticleConstruction").then(CommandManager.argument("value", bool()).executes(context -> {
+                doAsyncParticleConstruction = getBool(context, "value");
                 context.getSource().sendFeedback(new LiteralText("粒子异步状态已更新。"), false);
                 return 1;
             })))));
-            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("particleLifeAnimationFix").then(CommandManager.argument("value", bool()).executes(context -> {
-                fixLife = getBool(context, "value");
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("doParticleLifeAnimationFix").then(CommandManager.argument("value", bool()).executes(context -> {
+                doParticleLifeAnimationFix = getBool(context, "value");
                 context.getSource().sendFeedback(new LiteralText("寿命修复状态已更新。"), false);
                 return 1;
             })))));
-            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("globalAnimationFrameRate").then(CommandManager.argument("value", doubleArg(1)).executes(context -> {
-                frameRate = getDouble(context, "value");
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("doUnsafeRendererOptimization").then(CommandManager.argument("value", bool()).executes(context -> {
+                doUnsafeRendererOptimization = getBool(context, "value");
+                context.getSource().sendFeedback(new LiteralText("不安全优化状态已更新。"), false);
+                return 1;
+            })))));
+            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("globalAnimationTargetFrameRate").then(CommandManager.argument("value", doubleArg(1)).executes(context -> {
+                globalAnimationTargetFrameRate = getDouble(context, "value");
                 context.getSource().sendFeedback(new LiteralText("目标帧率已更新。"), false);
                 return 1;
             })))));
@@ -571,7 +576,7 @@ public final class Main implements ClientModInitializer {
         }
 
         public void tickLifeLeft() {
-            lifeLeft -= 1 / frameRate;
+            lifeLeft -= 1 / globalAnimationTargetFrameRate;
         }
 
         public boolean isDying() {

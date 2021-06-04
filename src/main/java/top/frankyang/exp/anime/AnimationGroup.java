@@ -8,6 +8,7 @@ import net.minecraft.client.util.math.Vector3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.ParticleUtils;
 import top.frankyang.exp.Property;
+import top.frankyang.exp.ThreadUtils;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -56,23 +57,30 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
         return new AnimationGroup(frames, time);
     }
 
-    public void apply(List<Particle> particles, boolean isInPool, boolean withdrawAfter, boolean killAllAfter) {
-        if (isInPool) {
-            apply0(particles, withdrawAfter, killAllAfter);
-            return;
+    private void apply(boolean isInPool, List<Particle> particles, boolean withdrawNow, boolean killAllAfter) {
+        if (isInPool) {  // No extra thread creation when is already in a pool.
+            apply0(particles, killAllAfter);
+        } else {
+            ThreadUtils.parallelPool.submit(() -> {
+                List<Particle> particles0 = new ArrayList<>();
+                particles.removeIf(p -> {
+                    particles0.add(p);
+                    return withdrawNow;
+                });
+                apply0(particles0, killAllAfter);
+            });
         }
-        Main.pool.submit(() -> apply0(particles, withdrawAfter, killAllAfter));
     }
 
 
-    public void apply(List<Particle> particles, boolean withdrawAfter, boolean killAllAfter) {
-        apply(particles, false, withdrawAfter, killAllAfter);
+    public void apply(List<Particle> particles, boolean withdrawNow, boolean killAllAfter) {
+        apply(false, particles, withdrawNow, killAllAfter);
     }
 
-    private void apply0(List<Particle> particles, boolean withdrawAfter, boolean killAllAfter) {
+    private void apply0(List<Particle> particles, boolean killAllAfter) {
         long keyFrameCount = AnimationGroup.this.size();
         long realFrameCount = Math.round(
-                time / 1000 * Main.frameRate
+                time / 1000 * Main.globalAnimationTargetFrameRate
         );
         List<AnimationFrame> realFrames = new ArrayList<>();
         for (int i = 0; i < keyFrameCount - 1; i++) {
@@ -117,7 +125,14 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
             for (int i = 0; i < bound; i++) {
                 Particle particle = particles.get(i);
                 Property property = properties.get(i);
-                apply0(particle, property, mx, my, mz, ox, oy, oz, realFrame, canDoAlpha, canDoScale, canDoTransform);
+                apply0(particle,
+                        property,
+                        mx, my, mz,
+                        ox, oy, oz,
+                        realFrame,
+                        canDoAlpha,
+                        canDoScale,
+                        canDoTransform);
             }
 
             try {
@@ -129,11 +144,10 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
             }
         }
 
-        if (hasNextGroup()) getNextGroup().apply(particles, true, withdrawAfter, killAllAfter);
-        else {
-            if (withdrawAfter) particles.clear();
-            if (killAllAfter) particles.forEach(Particle::markDead);
-        }
+        if (hasNextGroup())
+            getNextGroup().apply(true, particles, false, killAllAfter);
+        else if (killAllAfter)
+            particles.forEach(Particle::markDead);
     }
 
     private void apply0(Particle particle, Property property, double mx, double my, double mz, double ox, double oy, double oz, AnimationFrame frame, boolean canDoAlpha, boolean canDoScale, boolean canDoTransform) {
@@ -146,12 +160,12 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
             double ry = property.y - my + oy;
             double rz = property.z - mz + oz;
 
-            Vector3d then = frame.transform.evaluateOn(new Vector3d(rx, ry, rz));
+            Vector3d pos = frame.transform.evaluateOn(new Vector3d(rx, ry, rz));
 
             particle.setPos(
-                    then.x + mx - ox,
-                    then.y + my - oy,
-                    then.z + mz - oz
+                    pos.x + mx - ox,
+                    pos.y + my - oy,
+                    pos.z + mz - oz
             );
         }
 
@@ -159,36 +173,54 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
             case NORMAL:
                 ParticleUtils.setParticleColor(particle,
                         new Vector3d(
-                                frame.r < 0 ? property.r : frame.r / 255f,
-                                frame.g < 0 ? property.g : frame.g / 255f,
-                                frame.b < 0 ? property.b : frame.b / 255f
+                                frame.r < 0 ? property.r / 255f : frame.r / 255f,
+                                frame.g < 0 ? property.g / 255f : frame.g / 255f,
+                                frame.b < 0 ? property.b / 255f : frame.b / 255f
                         )
                 );
                 break;
             case MULTIPLY:
                 ParticleUtils.setParticleColor(particle,
                         new Vector3d(
-                                frame.r < 0 ? property.r : frame.r * property.r / 255f / 255f,
-                                frame.g < 0 ? property.g : frame.g * property.g / 255f / 255f,
-                                frame.b < 0 ? property.b : frame.b * property.b / 255f / 255f
+                                frame.r < 0 ? property.r / 255f : frame.r * property.r / 255f / 255f,
+                                frame.g < 0 ? property.g / 255f : frame.g * property.g / 255f / 255f,
+                                frame.b < 0 ? property.b / 255f : frame.b * property.b / 255f / 255f
                         )
                 );
                 break;
             case SCREEN:
                 ParticleUtils.setParticleColor(particle,
                         new Vector3d(
-                                frame.r < 0 ? property.r : 255 - (255 - frame.r) * (255 - property.r) / 255f / 255f,
-                                frame.g < 0 ? property.g : 255 - (255 - frame.g) * (255 - property.g) / 255f / 255f,
-                                frame.b < 0 ? property.b : 255 - (255 - frame.b) * (255 - property.b) / 255f / 255f
+                                frame.r < 0 ? property.r / 255f : 255 - (255 - frame.r) * (255 - property.r) / 255f / 255f,
+                                frame.g < 0 ? property.g / 255f : 255 - (255 - frame.g) * (255 - property.g) / 255f / 255f,
+                                frame.b < 0 ? property.b / 255f : 255 - (255 - frame.b) * (255 - property.b) / 255f / 255f
                         )
                 );
                 break;
             case AVERAGE:
                 ParticleUtils.setParticleColor(particle,
                         new Vector3d(
-                                frame.r < 0 ? property.r : (frame.r + property.r) / 2f / 255f,
-                                frame.g < 0 ? property.g : (frame.g + property.g) / 2f / 255f,
-                                frame.b < 0 ? property.b : (frame.b + property.b) / 2f / 255f
+                                frame.r < 0 ? property.r / 255f : (frame.r + property.r) / 2f / 255f,
+                                frame.g < 0 ? property.g / 255f : (frame.g + property.g) / 2f / 255f,
+                                frame.b < 0 ? property.b / 255f : (frame.b + property.b) / 2f / 255f
+                        )
+                );
+                break;
+            case LIGHTEN:
+                ParticleUtils.setParticleColor(particle,
+                        new Vector3d(
+                                frame.r < 0 ? property.r / 255f : Math.max(property.r / 255f, frame.r / 255f),
+                                frame.g < 0 ? property.g / 255f : Math.max(property.g / 255f, frame.g / 255f),
+                                frame.b < 0 ? property.b / 255f : Math.max(property.b / 255f, frame.b / 255f)
+                        )
+                );
+                break;
+            case DARKEN:
+                ParticleUtils.setParticleColor(particle,
+                        new Vector3d(
+                                frame.r < 0 ? property.r / 255f : Math.min(property.r / 255f, frame.r / 255f),
+                                frame.g < 0 ? property.g / 255f : Math.min(property.g / 255f, frame.g / 255f),
+                                frame.b < 0 ? property.b / 255f : Math.min(property.b / 255f, frame.b / 255f)
                         )
                 );
                 break;

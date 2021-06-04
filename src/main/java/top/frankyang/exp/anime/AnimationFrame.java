@@ -97,7 +97,7 @@ public class AnimationFrame {
 
         return new AnimationFrame(
                 new double[]{x, y, z},
-                new double[]{r, g, b},
+                new double[]{r, g, b, a},
                 s, pace < 50 ? this.blendMode : other.blendMode, p, t
         );
     }

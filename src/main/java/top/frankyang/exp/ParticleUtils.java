@@ -128,9 +128,9 @@ public final class ParticleUtils {
                 delta.x,
                 delta.y,
                 delta.z,
-                (int) color.x * 255,
-                (int) color.y * 255,
-                (int) color.z * 255,
+                (int) (color.x * 255),
+                (int) (color.y * 255),
+                (int) (color.z * 255),
                 getParticleAlpha(particle),
                 getParticleLife(particle),
                 getParticleScale(particle)

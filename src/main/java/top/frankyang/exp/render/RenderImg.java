@@ -29,7 +29,7 @@ public final class RenderImg implements Renderer {
     }
 
     static void renderMain(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, boolean mono, Vec2f size, int type, float alpha, int life, float scale, String group) {
-        if (Main.disabled) {
+        if (Main.isParticleConstructionPaused) {
             return;
         }
 
@@ -141,7 +141,7 @@ public final class RenderImg implements Renderer {
             }
         }
 
-        ParticleGroupMgr.INSTANCE.put(group, particles);
+        ParticleGroupMgr.INSTANCE.putParticles(group, particles);
     }
 
     private static int[][] getPixels(BufferedImage bf, int w, int h) {

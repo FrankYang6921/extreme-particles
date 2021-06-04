@@ -24,6 +24,9 @@ public class ParticleGroup implements List<Particle> {
             deadReferences.add(reference);
         }
         delegate.removeAll(deadReferences);  // A hash set is used to improve performance
+        delegate.removeIf(
+                r -> !Objects.requireNonNull(r.get()).isAlive()
+        );  // Made in order to get rid of dead particles caused by a deferred GC
     }
 
     @Override

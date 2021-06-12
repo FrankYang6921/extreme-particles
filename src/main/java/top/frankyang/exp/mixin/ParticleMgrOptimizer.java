@@ -19,7 +19,7 @@ import top.frankyang.exp.Main;
 import java.util.*;
 
 @Mixin(ParticleManager.class)
-public abstract class BetterParticleMgr implements ResourceReloadListener {
+public abstract class ParticleMgrOptimizer implements ResourceReloadListener {
     @Final
     @Shadow
     private static List<ParticleTextureSheet> PARTICLE_TEXTURE_SHEETS;
@@ -54,17 +54,17 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
 
         if (!particles.isEmpty()) {
             particles.forEach(
-                    (particleTextureSheet, queue) -> this.tickParticles(queue)
+                    (particleTextureSheet, queue) -> tickParticles(queue)
             );
         }
 
-        if (!this.newEmitterParticles.isEmpty()) {
-            this.newEmitterParticles.forEach(EmitterParticle::tick);
+        if (!newEmitterParticles.isEmpty()) {
+            newEmitterParticles.forEach(EmitterParticle::tick);
         }
 
         Particle particle;
-        if (!this.newParticles.isEmpty()) {
-            while ((particle = this.newParticles.poll()) != null) {
+        if (!newParticles.isEmpty()) {
+            while ((particle = newParticles.poll()) != null) {
                 particles.computeIfAbsent(
                         particle.getType(), (particleTextureSheet) -> new ArrayDeque<>()
                 ).add(particle);
@@ -80,7 +80,7 @@ public abstract class BetterParticleMgr implements ResourceReloadListener {
     @Overwrite
     @SuppressWarnings("deprecation")
     public void renderParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate, LightmapTextureManager lightmapTextureManager, Camera camera, float f) {
-        final boolean safeMode = !Main.doUnsafeRendererOptimization;
+        final boolean safeMode = !Main.isRendererUnsafelyOptimized();
 
         if (safeMode) {
             lightmapTextureManager.enable();

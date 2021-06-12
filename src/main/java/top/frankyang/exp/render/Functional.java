@@ -5,7 +5,7 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.Vec3d;
 import top.frankyang.exp.Main;
 import top.frankyang.exp.Property;
-import top.frankyang.exp.ThreadUtils;
+import top.frankyang.exp.ThreadMgr;
 import top.frankyang.exp.internal.Renderer;
 import top.frankyang.exp.internal.RendererContext;
 
@@ -13,8 +13,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static top.frankyang.exp.Main.frameSignal;
 
 public final class Functional implements Renderer {
     public static final Functional INSTANCE = new Functional();
@@ -29,11 +27,11 @@ public final class Functional implements Renderer {
         float a, s;
         int r, g, b, l;
 
-        double percent = thisTick / finalTick;
+        double progress = thisTick / finalTick;
         try {
             host.put("t", thisTick);
             host.put("f", finalTick);
-            host.put("p", percent);
+            host.put("p", progress);
             host.put("x", null);
             host.put("y", null);
             host.put("z", null);
@@ -84,7 +82,7 @@ public final class Functional implements Renderer {
     }
 
     public static void renderMain(ParticleEffect effect, String data, Vec3d origin, double time, int count) {
-        if (Main.isParticleConstructionPaused) {
+        if (Main.isParticleConstructionPaused()) {
             return;
         }
 
@@ -98,9 +96,9 @@ public final class Functional implements Renderer {
             ));
         }
 
-        ThreadUtils.parallelPool.submit(() -> {
+        ThreadMgr.INSTANCE.getParallelPool().submit(() -> {
             long frameCount = Math.round(
-                    frameTime * count / Main.globalAnimationTargetFrameRate
+                    frameTime * count / Main.getGlobalAnimationFrameRate()
             );
             long partLength = Math.round(
                     (double) count / frameCount
@@ -129,13 +127,7 @@ public final class Functional implements Renderer {
                     continue;
                 }
 
-                try {
-                    synchronized (frameSignal) {
-                        frameSignal.wait();
-                    }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                ThreadMgr.INSTANCE.waitForFrame();
             }
         });
     }

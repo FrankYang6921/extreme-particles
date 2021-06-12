@@ -3,8 +3,6 @@ package top.frankyang.exp.anime;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static top.frankyang.exp.anime.Transform.EMPTY;
-
 public class AnimationFrame {
     public final double x, y, z, progress;
     public final int r, g, b;
@@ -40,7 +38,7 @@ public class AnimationFrame {
 
         if (transforms.length > 1) {
             transform = Arrays.stream(transforms)
-                    .reduce(EMPTY, Transform::compositeWith);
+                    .reduce(Transform.EMPTY, Transform::compositeWith);
         } else if (transforms.length == 1) {
             transform = transforms[0];  // Only one, no composition
         } else {

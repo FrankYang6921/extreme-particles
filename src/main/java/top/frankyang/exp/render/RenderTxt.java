@@ -31,7 +31,7 @@ public final class RenderTxt implements Renderer {
     }
 
     private static void renderMain(ParticleEffect effect, String data, Vec3d origin, Vec3d delta, Vec3d color, String font, Vec2f size, int type, float alpha, int life, float scale, String group) {
-        if (Main.isParticleConstructionPaused) {
+        if (Main.isParticleConstructionPaused()) {
             return;
         }
 

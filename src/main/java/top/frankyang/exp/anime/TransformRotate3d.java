@@ -1,7 +1,8 @@
 package top.frankyang.exp.anime;
+
 import static java.lang.Math.*;
 
-public class TransformRotate3d extends Transform {
+public class TransformRotate3d extends TransformMatrix3d {
     private final double x, y, z, a;
 
     public TransformRotate3d(Double x, Double y, Double z, Double a) {

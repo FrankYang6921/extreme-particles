@@ -1,18 +1,22 @@
 package top.frankyang.exp;
 
 import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.util.math.Vector3d;
+import top.frankyang.exp.mixin.ParticleMgrReflector;
 import top.frankyang.exp.mixin.ParticleReflector;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.WeakHashMap;
 
 @SuppressWarnings({"unused"})
-public final class ParticleUtils {
+public final class Particles {
     private static final Map<Particle, Float> scaleCache = new WeakHashMap<>();
+    private static final Map<Particle, Float> alphaCache = new WeakHashMap<>();
 
-    private ParticleUtils() {
+    private Particles() {
     }
 
     public static Vector3d getParticleColor(Particle particle) {
@@ -39,7 +43,23 @@ public final class ParticleUtils {
     }
 
     public static void setParticleAlpha(Particle particle, float alpha) {
-        ((ParticleReflector) particle).setColorAlpha(alpha);
+        if (!alphaCache.containsKey(particle)) {  // Not hidden
+            ((ParticleReflector) particle).setColorAlpha(alpha);
+        }
+    }
+
+    public static void hideParticleByAlpha(Particle particle) {
+        if (!alphaCache.containsKey(particle)) {  // Not hidden
+            alphaCache.put(particle, getParticleAlpha(particle));
+            setParticleAlpha(particle, 0);
+        }
+
+    }
+
+    public static void showParticleByAlpha(Particle particle) {
+        if (alphaCache.containsKey(particle)) {  // Not shown
+            setParticleAlpha(particle, alphaCache.remove(particle));
+        }
     }
 
     public static int getParticleLife(Particle particle) {
@@ -135,5 +155,9 @@ public final class ParticleUtils {
                 getParticleLife(particle),
                 getParticleScale(particle)
         );
+    }
+
+    public static Map<ParticleTextureSheet, Queue<Particle>> getParticles() {
+        return ((ParticleMgrReflector) Main.getClient().particleManager).getParticles();
     }
 }

@@ -6,9 +6,9 @@ import com.google.gson.JsonSyntaxException;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.util.math.Vector3d;
 import top.frankyang.exp.Main;
-import top.frankyang.exp.ParticleUtils;
+import top.frankyang.exp.Particles;
 import top.frankyang.exp.Property;
-import top.frankyang.exp.ThreadUtils;
+import top.frankyang.exp.ThreadMgr;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static top.frankyang.exp.Main.frameSignal;
-import static top.frankyang.exp.ParticleUtils.getRect3d;
+import static top.frankyang.exp.Particles.getRect3d;
 
 public class AnimationGroup extends ArrayList<AnimationFrame> {
     private static final Gson gson = new Gson();
@@ -61,7 +60,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
         if (isInPool) {  // No extra thread creation when is already in a pool.
             apply0(particles, killAllAfter);
         } else {
-            ThreadUtils.parallelPool.submit(() -> {
+            ThreadMgr.INSTANCE.getParallelPool().submit(() -> {
                 List<Particle> particles0 = new ArrayList<>();
                 particles.removeIf(p -> {
                     particles0.add(p);
@@ -80,7 +79,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
     private void apply0(List<Particle> particles, boolean killAllAfter) {
         long keyFrameCount = AnimationGroup.this.size();
         long realFrameCount = Math.round(
-                time / 1000 * Main.globalAnimationTargetFrameRate
+                time / 1000 * Main.getGlobalAnimationFrameRate()
         );
         List<AnimationFrame> realFrames = new ArrayList<>();
         for (int i = 0; i < keyFrameCount - 1; i++) {
@@ -97,7 +96,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
 
         List<Property> properties = new ArrayList<>();
         for (Particle particle : particles) {
-            properties.add(ParticleUtils.getParticleProperty(particle));
+            properties.add(Particles.getParticleProperty(particle));
         }
         Vector3d[] rect3d = getRect3d(
                 properties.stream().map(p -> new Vector3d(p.x, p.y, p.z)).collect(Collectors.toList())
@@ -111,7 +110,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
 
             boolean canDoAlpha = realFrame.a >= 0;
             boolean canDoScale = realFrame.s >= 0;
-            boolean canDoTransform = !realFrame.transform.equals(Transform.EMPTY);
+            boolean canDoTransform = !realFrame.transform.isEffectivelyEmpty();
             double ox = 0,
                     oy = 0,
                     oz = 0;
@@ -135,13 +134,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                         canDoTransform);
             }
 
-            try {
-                synchronized (frameSignal) {
-                    frameSignal.wait();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            ThreadMgr.INSTANCE.waitForFrame();
         }
 
         if (hasNextGroup())
@@ -171,7 +164,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
 
         switch (frame.blendMode) {
             case NORMAL:
-                ParticleUtils.setParticleColor(particle,
+                Particles.setParticleColor(particle,
                         new Vector3d(
                                 frame.r < 0 ? property.r / 255f : frame.r / 255f,
                                 frame.g < 0 ? property.g / 255f : frame.g / 255f,
@@ -180,7 +173,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                 );
                 break;
             case MULTIPLY:
-                ParticleUtils.setParticleColor(particle,
+                Particles.setParticleColor(particle,
                         new Vector3d(
                                 frame.r < 0 ? property.r / 255f : frame.r * property.r / 255f / 255f,
                                 frame.g < 0 ? property.g / 255f : frame.g * property.g / 255f / 255f,
@@ -189,7 +182,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                 );
                 break;
             case SCREEN:
-                ParticleUtils.setParticleColor(particle,
+                Particles.setParticleColor(particle,
                         new Vector3d(
                                 frame.r < 0 ? property.r / 255f : 255 - (255 - frame.r) * (255 - property.r) / 255f / 255f,
                                 frame.g < 0 ? property.g / 255f : 255 - (255 - frame.g) * (255 - property.g) / 255f / 255f,
@@ -198,7 +191,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                 );
                 break;
             case AVERAGE:
-                ParticleUtils.setParticleColor(particle,
+                Particles.setParticleColor(particle,
                         new Vector3d(
                                 frame.r < 0 ? property.r / 255f : (frame.r + property.r) / 2f / 255f,
                                 frame.g < 0 ? property.g / 255f : (frame.g + property.g) / 2f / 255f,
@@ -207,7 +200,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                 );
                 break;
             case LIGHTEN:
-                ParticleUtils.setParticleColor(particle,
+                Particles.setParticleColor(particle,
                         new Vector3d(
                                 frame.r < 0 ? property.r / 255f : Math.max(property.r / 255f, frame.r / 255f),
                                 frame.g < 0 ? property.g / 255f : Math.max(property.g / 255f, frame.g / 255f),
@@ -216,7 +209,7 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
                 );
                 break;
             case DARKEN:
-                ParticleUtils.setParticleColor(particle,
+                Particles.setParticleColor(particle,
                         new Vector3d(
                                 frame.r < 0 ? property.r / 255f : Math.min(property.r / 255f, frame.r / 255f),
                                 frame.g < 0 ? property.g / 255f : Math.min(property.g / 255f, frame.g / 255f),
@@ -227,11 +220,11 @@ public class AnimationGroup extends ArrayList<AnimationFrame> {
         }
 
         if (canDoAlpha) {
-            ParticleUtils.setParticleAlpha(particle, frame.a);
+            Particles.setParticleAlpha(particle, frame.a);
         }
 
         if (canDoScale) {
-            ParticleUtils.setParticleScale(particle, frame.s);
+            Particles.setParticleScale(particle, frame.s);
         }
     }
 

@@ -17,104 +17,49 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Transform {
-    public static final Transform EMPTY = new Transform();
-
-    protected final Double[] arguments;
-
-    public Transform(Double... arguments) {
-        if (arguments.length == 0) {
-            this.arguments = new Double[]{
-                    1d, 0d, 0d, 0d,
-                    0d, 1d, 0d, 0d,
-                    0d, 0d, 1d, 0d,
-                    0d, 0d, 0d, 1d
-            };
-            /*  -           -
-             * | 0  4  8  12 |
-             * | 1  5  9  13 |
-             * | 2  6  10 14 |
-             * | 3  7  11 15 |
-             *  -           -
-             */
-        } else if (arguments.length == 16) {
-            this.arguments = arguments;
-        } else {
-            throw new IllegalArgumentException(String.format("三维矩阵变换仅允许没有或有16个参数，而非%d个。", arguments.length));
-        }
-    }
-
-    protected static double compositeVal(double a, double b, double progress) {
-        return a * (1 - progress / 100d) + b * progress / 100d;
-    }
-
-    public Vector3d evaluateOn(Vector3d position) {
-        double x = position.x;
-        double y = position.y;
-        double z = position.z;
-        double nx = arguments[0] * x + arguments[4] * y + arguments[8] * z + arguments[12];
-        double ny = arguments[1] * x + arguments[5] * y + arguments[9] * z + arguments[13];
-        double nz = arguments[2] * x + arguments[6] * y + arguments[10] * z + arguments[14];
-        return new Vector3d(nx, ny, nz);
-    }
-
-    public List<Vector3d> evaluateOn(List<Vector3d> positions) {
-        List<Vector3d> result = new ArrayList<>();
-        for (Vector3d position : positions) {
-            result.add(evaluateOn(position));
-        }
-        return result;
-    }
-
-    public Transform compositeWith(Transform other, double progress) {
-        Double[] arguments = new Double[16];
-        for (int i = 0; i < 16; i++) {
-            arguments[i] = compositeVal(this.arguments[i], other.arguments[i], progress);
-        }
-        return new Transform(arguments);
-    }
-
-    public Transform compositeWith(Transform other) {
-        // Algorithm from https://github.com/jlmakes/rematrix
-        Double[] finalArgs = new Double[16];
-        Double[] thisArgs = this.arguments;
-        Double[] otherArgs = other.arguments;
-
-        for (int i = 0; i < 4; i++) {
-            Double[] row = new Double[]{
-                    thisArgs[i], thisArgs[i + 4], thisArgs[i + 8], thisArgs[1 + 12]
-            };
-            for (int j = 0; j < 4; j++) {
-                int k = j * 4;
-                Double[] col = new Double[]{
-                        otherArgs[k], otherArgs[k + 1], otherArgs[k + 2], otherArgs[k + 3]
-                };
-                double res = row[0] * col[0] + row[1] * col[1] + row[2] * col[2] + row[3] * col[3];
-                finalArgs[i + k] = res;
-            }
+public interface Transform {
+    Transform EMPTY = new Transform() {
+        @Override
+        public Transform compositeWith(Transform other, double progress) {
+            throw new UnsupportedOperationException();
         }
 
-        return new Transform(finalArgs);
-    }
+        @Override
+        public Transform compositeWith(Transform other) {
+            throw new UnsupportedOperationException();
+        }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Transform)) return false;
-        Transform transform = (Transform) o;
-        return Arrays.equals(arguments, transform.arguments);
-    }
+        @Override
+        public Vector3d evaluateOn(Vector3d position) {
+            throw new UnsupportedOperationException();
+        }
 
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(arguments);
-    }
+        @Override
+        public List<Vector3d> evaluateOn(List<Vector3d> positions) {
+            throw new UnsupportedOperationException();
+        }
 
-    public static final class TransformFactory {
+        @Override
+        public boolean isEffectivelyEmpty() {
+            return true;
+        }
+    };
+
+    Transform compositeWith(Transform other, double progress);
+
+    Transform compositeWith(Transform other);
+
+    Vector3d evaluateOn(Vector3d position);
+
+    List<Vector3d> evaluateOn(List<Vector3d> positions);
+
+    boolean isEffectivelyEmpty();
+
+    final class TransformFactory {
         private static final Map<String, Class<? extends Transform>> transformMap = new HashMap<>();
 
         static {
-            transformMap.put("matrix3d", Transform.class);
+            transformMap.put("matrix3d", TransformMatrix3d.class);
             transformMap.put("rotateX", TransformRotateX.class);
             transformMap.put("rotateY", TransformRotateY.class);
             transformMap.put("rotateZ", TransformRotateZ.class);

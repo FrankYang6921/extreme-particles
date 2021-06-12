@@ -1,6 +1,6 @@
 package top.frankyang.exp.anime;
 
-public class TransformScale3d extends Transform {
+public class TransformScale3d extends TransformMatrix3d {
     public TransformScale3d(Double x, Double y, Double z) {
         super(x, 0d, 0d, 0d, 0d, y, 0d, 0d, 0d, 0d, z, 0d, 0d, 0d, 0d, 1d);
     }

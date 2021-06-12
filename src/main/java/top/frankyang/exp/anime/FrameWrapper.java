@@ -35,7 +35,7 @@ public class FrameWrapper {
 
         Transform[] transforms;
         if (this.transforms == null) {
-            transforms = new Transform[]{Transform.EMPTY};
+            transforms = new Transform[0];
         } else {
             transforms = new Transform[this.transforms.length];
             for (int i = 0; i < transforms.length; i++) {

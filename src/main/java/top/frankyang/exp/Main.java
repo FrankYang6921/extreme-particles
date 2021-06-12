@@ -48,7 +48,7 @@ public final class Main implements ClientModInitializer {
     public static final ParticleDaemon particleDaemon = new ParticleDaemon();
     private static final int MAJOR_VERSION = 0;
     private static final int MINOR_VERSION = 5;
-    private static final int REVISION = 3;
+    private static final int REVISION = 4;
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
     public static boolean particleConstructionPaused = false;

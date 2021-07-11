@@ -71,7 +71,6 @@ public class TransformMatrix3d implements Transform {
 
     public Transform compositeWith(Transform other) {
         TransformMatrix3d $other = (TransformMatrix3d) other;
-        // Algorithm from https://github.com/jlmakes/rematrix
         Double[] finalArgs = new Double[16];
         Double[] thisArgs = this.arguments;
         Double[] otherArgs = $other.arguments;

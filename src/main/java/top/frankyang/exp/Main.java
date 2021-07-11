@@ -48,13 +48,12 @@ public final class Main implements ClientModInitializer {
     public static final ParticleDaemon particleDaemon = new ParticleDaemon();
     private static final int MAJOR_VERSION = 0;
     private static final int MINOR_VERSION = 5;
-    private static final int REVISION = 4;
+    private static final int REVISION = 5;
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
     public static boolean particleConstructionPaused = false;
     public static boolean particleConstructionAsync = true;
     public static boolean particleDeathAnimationFixed = true;
-    public static boolean rendererUnsafelyOptimized = false;
     public static double globalAnimationFrameRate = 30.3d;
     private static ScriptEngine host;
 
@@ -69,11 +68,6 @@ public final class Main implements ClientModInitializer {
     public static boolean isParticleDeathAnimationFixed() {
         return particleDeathAnimationFixed;
     }
-
-    public static boolean isRendererUnsafelyOptimized() {
-        return rendererUnsafelyOptimized;
-    }
-
     public static double getGlobalAnimationFrameRate() {
         return globalAnimationFrameRate;
     }
@@ -466,11 +460,6 @@ public final class Main implements ClientModInitializer {
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("setParticleDeathAnimationFixed").then(CommandManager.argument("value", bool()).executes(context -> {
                 particleDeathAnimationFixed = getBool(context, "value");
                 context.getSource().sendFeedback(new LiteralText("寿命修复状态已更新。"), true);
-                return 1;
-            })))));
-            dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("setRendererUnsafelyOptimized").then(CommandManager.argument("value", bool()).executes(context -> {
-                rendererUnsafelyOptimized = getBool(context, "value");
-                context.getSource().sendFeedback(new LiteralText("不安全优化状态已更新。"), true);
                 return 1;
             })))));
             dispatcher.register(CommandManager.literal("exp").then(CommandManager.literal("configure").then(CommandManager.literal("setGlobalAnimationFrameRate").then(CommandManager.argument("value", doubleArg(1)).executes(context -> {

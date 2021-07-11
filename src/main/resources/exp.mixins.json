@@ -4,7 +4,6 @@
   "package": "top.frankyang.exp.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "ParticleMgrOptimizer",
     "ParticleMgrReflector",
     "ParticleReflector"
   ],
